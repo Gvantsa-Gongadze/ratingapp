@@ -1,0 +1,23 @@
+{
+  "name": "ratingapp",
+  "private": true,
+  "version": "0.1.0",
+  "description": "RatingApp — daily random movie assignments, ratings, rankings and groups",
+  "packageManager": "pnpm@9.0.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "pnpm --parallel --filter ./apps/* dev",
+    "dev:api": "pnpm --filter @ratingapp/api dev",
+    "dev:web": "pnpm --filter @ratingapp/web dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "db:up": "docker compose up -d",
+    "db:down": "docker compose down"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
