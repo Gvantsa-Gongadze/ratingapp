@@ -4,6 +4,8 @@ export interface RateMovieRequest {
   /** 1-10 */
   score: number;
   review?: string;
+  /** ISO 8601 timestamp of when the user actually rated it. */
+  ratedAt: string;
 }
 
 export interface RatingDto {
@@ -33,4 +35,6 @@ export interface RankingEntryDto {
   posterUrl: string | null;
   weightedScore: number;
   ratingsCount: number;
+  /** ISO 8601 timestamp of the most recent rating this movie received. */
+  ratedAt: string;
 }

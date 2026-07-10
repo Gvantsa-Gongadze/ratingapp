@@ -372,3 +372,11 @@ body {
   color: var(--text-dim);
 }
 
+.ranking-timestamp {
+  flex-shrink: 0;
+  width: 4.5rem;
+  text-align: right;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+

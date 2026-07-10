@@ -22,6 +22,6 @@ export class AssignmentsController {
 
   @Post(':id/rate')
   rate(@CurrentUser() user: User, @Param('id') id: string, @Body() dto: RateMovieDto) {
-    return this.assignmentsService.rate(user.id, id, dto.score, dto.review ?? null);
+    return this.assignmentsService.rate(user.id, id, dto.score, dto.review ?? null, dto.ratedAt);
   }
 }

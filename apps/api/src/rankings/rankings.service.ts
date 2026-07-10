@@ -72,6 +72,7 @@ export class RankingsService {
         posterUrl: buildPosterUrl(row.posterPath),
         weightedScore: Math.round(row.weightedScore * 10) / 10,
         ratingsCount: row.ratingsCount,
+        ratedAt: new Date(row.latestRatedAt).toISOString(),
       }));
   }
 

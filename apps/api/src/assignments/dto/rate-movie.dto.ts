@@ -1,4 +1,4 @@
-import { IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsISO8601, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class RateMovieDto {
   @IsNumber({ maxDecimalPlaces: 1 })
@@ -9,4 +9,7 @@ export class RateMovieDto {
   @IsOptional()
   @IsString()
   review?: string;
+
+  @IsISO8601()
+  ratedAt: string;
 }

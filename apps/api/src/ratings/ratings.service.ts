@@ -11,6 +11,7 @@ export interface CreateRatingInput {
   movieId: string;
   score: number;
   reviewText: string | null;
+  ratedAt: Date;
 }
 
 @Injectable()

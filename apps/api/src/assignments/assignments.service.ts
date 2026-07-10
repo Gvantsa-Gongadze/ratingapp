@@ -41,6 +41,7 @@ export class AssignmentsService {
     assignmentId: string,
     score: number,
     review: string | null,
+    ratedAt: string,
   ): Promise<AssignmentDto> {
     const assignment = await this.loadOwnedActive(userId, assignmentId);
 
@@ -50,6 +51,7 @@ export class AssignmentsService {
       movieId: assignment.movieId,
       score,
       reviewText: review,
+      ratedAt: new Date(ratedAt),
     });
 
     assignment.status = 'rated';

@@ -22,7 +22,11 @@ export function CurrentMoviePage() {
 
   const rateMutation = useMutation({
     mutationFn: (assignmentId: string) =>
-      rateAssignment(assignmentId, { score: score as number, review: review.trim() || undefined }),
+      rateAssignment(assignmentId, {
+        score: score as number,
+        review: review.trim() || undefined,
+        ratedAt: new Date().toISOString(),
+      }),
     onSuccess: (next) => {
       queryClient.setQueryData(ASSIGNMENT_QUERY_KEY, next);
       setScore(7);
