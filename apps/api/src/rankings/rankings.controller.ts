@@ -8,6 +8,6 @@ export class RankingsController {
 
   @Get()
   getRankings(@Query() query: RankingsQueryDto) {
-    return this.rankingsService.getRankings(query.period ?? 'all');
+    return this.rankingsService.getRankings(query.period ?? 'all', query.tz);
   }
 }

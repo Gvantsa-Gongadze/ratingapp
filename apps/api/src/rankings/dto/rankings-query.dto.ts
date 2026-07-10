@@ -1,5 +1,5 @@
 import type { RankingPeriod } from '@ratingapp/shared-types';
-import { IsIn, IsOptional } from 'class-validator';
+import { IsIn, IsOptional, IsString } from 'class-validator';
 
 const PERIODS: RankingPeriod[] = ['daily', 'weekly', 'monthly', 'all'];
 
@@ -7,4 +7,9 @@ export class RankingsQueryDto {
   @IsOptional()
   @IsIn(PERIODS)
   period?: RankingPeriod;
+
+  /** IANA timezone name (e.g. "Asia/Tbilisi") used to compute calendar boundaries. */
+  @IsOptional()
+  @IsString()
+  tz?: string;
 }
