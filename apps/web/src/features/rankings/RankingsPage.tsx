@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { fetchRankings } from '../../api/rankings';
 import { fetchMyRatings } from '../../api/ratings';
 import { ApiError } from '../../api/client';
+import { PageLoader } from '../../components/PageLoader';
 
 const PERIODS: { value: RankingPeriod; label: string }[] = [
   { value: 'daily', label: 'Today' },
@@ -64,7 +65,7 @@ export function RankingsPage() {
         ))}
       </div>
 
-      {isLoading && <p className="placeholder-copy">Loading rankings…</p>}
+      {isLoading && <PageLoader />}
 
       {isError && (
         <p className="status-error">
@@ -84,7 +85,13 @@ export function RankingsPage() {
               <li key={entry.movieId} className="ranking-row">
                 <span className="ranking-rank">{entry.rank}</span>
                 {entry.posterUrl && (
-                  <img className="ranking-poster" src={entry.posterUrl} alt={`${entry.title} poster`} />
+                  <img
+                    className="ranking-poster"
+                    src={entry.posterUrl}
+                    alt={`${entry.title} poster`}
+                    loading="lazy"
+                    decoding="async"
+                  />
                 )}
                 <div className="ranking-info">
                   <span className="ranking-title">

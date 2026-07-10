@@ -1,5 +1,7 @@
+import { Suspense } from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../api/auth-context';
+import { PageLoader } from './PageLoader';
 
 export function Layout() {
   const { isAuthenticated, logout } = useAuth();
@@ -34,7 +36,9 @@ export function Layout() {
         </nav>
       </header>
       <main className="app-main">
-        <Outlet />
+        <Suspense fallback={<PageLoader fullPage />}>
+          <Outlet />
+        </Suspense>
       </main>
     </div>
   );

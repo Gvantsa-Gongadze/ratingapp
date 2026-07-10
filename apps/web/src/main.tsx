@@ -20,7 +20,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter
         future={{
-          v7_startTransition: true,
+          // Deliberately not v7_startTransition: that flag keeps the old
+          // screen mounted during navigation, which suppresses the
+          // Suspense fallback we rely on to show a loader between routes.
           v7_relativeSplatPath: true,
         }}
       >

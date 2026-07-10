@@ -380,3 +380,30 @@ body {
   color: var(--text-dim);
 }
 
+.page-loader {
+  display: flex;
+  justify-content: center;
+  padding: 4rem 0;
+}
+
+.page-loader--full {
+  min-height: 70vh;
+  align-items: center;
+  padding: 0;
+}
+
+.spinner {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: 3px solid #2c2c35;
+  border-top-color: var(--accent);
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+

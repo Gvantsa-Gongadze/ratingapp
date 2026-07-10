@@ -1,12 +1,24 @@
+import { lazy } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { CurrentMoviePage } from './features/current-movie/CurrentMoviePage';
-import { AuthPage } from './features/auth/AuthPage';
-import { RankingsPage } from './features/rankings/RankingsPage';
-import { MovieDetailPage } from './features/movies/MovieDetailPage';
-import { GroupsPage } from './features/groups/GroupsPage';
-import { GroupDetailPage } from './features/groups/GroupDetailPage';
-import { UserProfilePage } from './features/profile/UserProfilePage';
+
+// Code-split every route except the index page, which loads eagerly anyway
+// since it's what most visits land on first.
+const AuthPage = lazy(() => import('./features/auth/AuthPage').then((m) => ({ default: m.AuthPage })));
+const RankingsPage = lazy(() =>
+  import('./features/rankings/RankingsPage').then((m) => ({ default: m.RankingsPage })),
+);
+const MovieDetailPage = lazy(() =>
+  import('./features/movies/MovieDetailPage').then((m) => ({ default: m.MovieDetailPage })),
+);
+const GroupsPage = lazy(() => import('./features/groups/GroupsPage').then((m) => ({ default: m.GroupsPage })));
+const GroupDetailPage = lazy(() =>
+  import('./features/groups/GroupDetailPage').then((m) => ({ default: m.GroupDetailPage })),
+);
+const UserProfilePage = lazy(() =>
+  import('./features/profile/UserProfilePage').then((m) => ({ default: m.UserProfilePage })),
+);
 
 export default function App() {
   return (
