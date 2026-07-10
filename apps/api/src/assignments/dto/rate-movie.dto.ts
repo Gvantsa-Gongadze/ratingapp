@@ -1,7 +1,7 @@
-import { IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class RateMovieDto {
-  @IsInt()
+  @IsNumber({ maxDecimalPlaces: 1 })
   @Min(1)
   @Max(10)
   score: number;

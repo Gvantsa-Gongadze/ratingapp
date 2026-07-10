@@ -41,7 +41,7 @@ export class Rating {
   @JoinColumn({ name: 'movie_id' })
   movie: Movie;
 
-  @Column({ type: 'smallint' })
+  @Column({ type: 'real' })
   score: number;
 
   @Column({ name: 'review_text', type: 'text', nullable: true })

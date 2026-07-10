@@ -86,7 +86,7 @@ export function RankingsPage() {
                     <span className="score-label">Everyone</span>
                   </div>
                   <div className="score-block">
-                    <span className="score-value">{myScore ?? '—'}</span>
+                    <span className="score-value">{myScore !== undefined ? myScore.toFixed(1) : '—'}</span>
                     <span className="score-label">You</span>
                   </div>
                 </div>

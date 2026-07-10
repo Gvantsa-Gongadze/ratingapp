@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { FormEvent, useEffect, useRef, useState } from 'react';
+import { ChangeEvent, FormEvent, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchCurrentAssignment, rateAssignment, skipAssignment } from '../../api/assignments';
 import { ApiError } from '../../api/client';
@@ -14,12 +14,15 @@ export function CurrentMoviePage() {
     retry: false,
   });
 
-  const [score, setScore] = useState(7);
+  const [score, setScore] = useState<number | ''>(7);
   const [review, setReview] = useState('');
+
+  const isScoreValid =
+    typeof score === 'number' && score >= 1 && score <= 10 && Number(score.toFixed(1)) === score;
 
   const rateMutation = useMutation({
     mutationFn: (assignmentId: string) =>
-      rateAssignment(assignmentId, { score, review: review.trim() || undefined }),
+      rateAssignment(assignmentId, { score: score as number, review: review.trim() || undefined }),
     onSuccess: (next) => {
       queryClient.setQueryData(ASSIGNMENT_QUERY_KEY, next);
       setScore(7);
@@ -34,9 +37,20 @@ export function CurrentMoviePage() {
     },
   });
 
+  function handleScoreChange(event: ChangeEvent<HTMLInputElement>) {
+    const raw = event.target.value;
+    setScore(raw === '' ? '' : Number(raw));
+  }
+
+  function handleScoreBlur() {
+    if (score === '') return;
+    const clamped = Math.min(10, Math.max(1, score));
+    setScore(Math.round(clamped * 10) / 10);
+  }
+
   function handleRate(event: FormEvent) {
     event.preventDefault();
-    if (data) rateMutation.mutate(data.id);
+    if (data && isScoreValid) rateMutation.mutate(data.id);
   }
 
   function handleSkip() {
@@ -118,15 +132,21 @@ export function CurrentMoviePage() {
 
       <form className="rate-form" onSubmit={handleRate}>
         <label>
-          Your rating
-          <select value={score} onChange={(event) => setScore(Number(event.target.value))}>
-            {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
+          Your rating (1-10)
+          <input
+            type="number"
+            min={1}
+            max={10}
+            step={0.1}
+            required
+            value={score}
+            onChange={handleScoreChange}
+            onBlur={handleScoreBlur}
+          />
         </label>
+        {score !== '' && !isScoreValid && (
+          <p className="auth-error">Rating must be between 1 and 10, with at most one decimal place</p>
+        )}
 
         <label>
           Review (optional)
@@ -149,7 +169,10 @@ export function CurrentMoviePage() {
         )}
 
         <div className="movie-actions">
-          <button type="submit" disabled={rateMutation.isPending || skipMutation.isPending}>
+          <button
+            type="submit"
+            disabled={!isScoreValid || rateMutation.isPending || skipMutation.isPending}
+          >
             {rateMutation.isPending ? 'Saving…' : 'Rate'}
           </button>
           <button

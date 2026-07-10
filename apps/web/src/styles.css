@@ -148,7 +148,7 @@ body {
   color: var(--text-dim);
 }
 
-.rate-form select,
+.rate-form input,
 .rate-form textarea {
   padding: 0.6rem 0.75rem;
   border-radius: 6px;
@@ -157,6 +157,16 @@ body {
   color: var(--text);
   font-size: 1rem;
   font-family: inherit;
+}
+
+.rate-form input[type='number'] {
+  max-width: 6rem;
+}
+
+.rate-form input:focus,
+.rate-form textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
 }
 
 .rate-form textarea {
