@@ -24,6 +24,9 @@ export class Movie {
   @Column({ name: 'poster_path', type: 'text', nullable: true })
   posterPath: string | null;
 
+  @Column({ type: 'text', nullable: true })
+  overview: string | null;
+
   @Column({ type: 'jsonb', default: () => "'[]'" })
   genres: string[];
 
