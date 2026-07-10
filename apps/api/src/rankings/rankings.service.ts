@@ -17,6 +17,7 @@ interface RawRankingRow {
   posterPath: string | null;
   avgScore: string;
   ratingsCount: string;
+  latestRatedAt: string;
 }
 
 @Injectable()
@@ -38,6 +39,7 @@ export class RankingsService {
       .addSelect('movie.poster_path', 'posterPath')
       .addSelect('AVG(rating.score)', 'avgScore')
       .addSelect('COUNT(rating.id)', 'ratingsCount')
+      .addSelect('MAX(rating.rated_at)', 'latestRatedAt')
       .groupBy('movie.id')
       .addGroupBy('movie.title')
       .addGroupBy('movie.year')
@@ -60,7 +62,7 @@ export class RankingsService {
 
     return rows
       .map((row) => ({ ...row, weightedScore: this.weightedScore(row.avgScore, row.ratingsCount, globalMean) }))
-      .sort((a, b) => b.weightedScore - a.weightedScore)
+      .sort((a, b) => new Date(b.latestRatedAt).getTime() - new Date(a.latestRatedAt).getTime())
       .slice(0, MAX_RESULTS)
       .map((row, index) => ({
         rank: index + 1,
