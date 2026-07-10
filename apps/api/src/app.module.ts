@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { DatabaseModule } from './database/database.module';
 import { HealthModule } from './health/health.module';
 import { MoviesModule } from './movies/movies.module';
+import { RankingsModule } from './rankings/rankings.module';
 import { RatingsModule } from './ratings/ratings.module';
 import { UsersModule } from './users/users.module';
 
@@ -21,8 +22,8 @@ import { UsersModule } from './users/users.module';
     AuthModule,
     RatingsModule,
     AssignmentsModule,
+    RankingsModule,
     // Coming next, in build order:
-    // RankingsModule,
     // GroupsModule,
     // JobsModule,
   ],

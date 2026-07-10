@@ -12,7 +12,7 @@ export function AuthPage() {
 
   return (
     <section className="auth-page">
-      <div className="auth-tabs">
+      <div className="tabs">
         <button
           type="button"
           className={mode === 'login' ? 'active' : ''}

@@ -194,14 +194,14 @@ body {
   cursor: not-allowed;
 }
 
-.auth-tabs {
+.tabs {
   display: flex;
   gap: 0.5rem;
   margin-bottom: 1.5rem;
   border-bottom: 1px solid #2c2c35;
 }
 
-.auth-tabs button {
+.tabs button {
   padding: 0.6rem 0.25rem;
   margin-right: 1.25rem;
   background: none;
@@ -213,7 +213,7 @@ body {
   cursor: pointer;
 }
 
-.auth-tabs button.active {
+.tabs button.active {
   color: var(--text);
   border-bottom-color: var(--accent);
 }
@@ -266,5 +266,78 @@ body {
   color: var(--error);
   font-size: 0.9rem;
   margin: 0;
+}
+
+.rankings-page h1 {
+  margin-bottom: 1rem;
+}
+
+.ranking-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ranking-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid #2c2c35;
+}
+
+.ranking-rank {
+  width: 1.75rem;
+  flex-shrink: 0;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-align: right;
+}
+
+.ranking-poster {
+  width: 46px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.ranking-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.ranking-title {
+  font-weight: 600;
+}
+
+.ranking-meta {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.ranking-score {
+  flex-shrink: 0;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--accent);
+}
+
+.ratings-page h1 {
+  margin-bottom: 1.5rem;
+}
+
+.rating-row {
+  align-items: flex-start;
+}
+
+.rating-review {
+  margin: 0.15rem 0;
+  font-size: 0.9rem;
+  color: var(--text);
+  line-height: 1.4;
 }
 

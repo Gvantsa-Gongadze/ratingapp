@@ -1,3 +1,5 @@
+import type { MovieDto } from './movie';
+
 export interface RateMovieRequest {
   /** 1-10 */
   score: number;
@@ -8,6 +10,14 @@ export interface RatingDto {
   id: string;
   movieId: string;
   userId: string;
+  score: number;
+  review: string | null;
+  ratedAt: string;
+}
+
+export interface MyRatingDto {
+  id: string;
+  movie: MovieDto;
   score: number;
   review: string | null;
   ratedAt: string;

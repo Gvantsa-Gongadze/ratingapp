@@ -21,9 +21,12 @@ export function Layout() {
           <Link to="/rankings">Rankings</Link>
           <Link to="/groups">Groups</Link>
           {isAuthenticated ? (
-            <button type="button" className="nav-logout" onClick={handleLogout}>
-              Log out
-            </button>
+            <>
+              <Link to="/my-ratings">My Ratings</Link>
+              <button type="button" className="nav-logout" onClick={handleLogout}>
+                Log out
+              </button>
+            </>
           ) : (
             <Link to="/auth">Log in / Sign up</Link>
           )}

@@ -8,6 +8,10 @@ import type { TmdbMovie } from './tmdb/tmdb.types';
 
 const TMDB_POSTER_BASE = 'https://image.tmdb.org/t/p/w500';
 
+export function buildPosterUrl(posterPath: string | null): string | null {
+  return posterPath ? `${TMDB_POSTER_BASE}${posterPath}` : null;
+}
+
 @Injectable()
 export class MoviesService {
   constructor(
@@ -59,7 +63,7 @@ export class MoviesService {
       imdbId: movie.imdbId,
       title: movie.title,
       year: movie.year ?? 0,
-      posterUrl: movie.posterPath ? `${TMDB_POSTER_BASE}${movie.posterPath}` : null,
+      posterUrl: buildPosterUrl(movie.posterPath),
       genres: movie.genres,
       runtime: movie.runtime,
       overview: movie.overview ?? '',
