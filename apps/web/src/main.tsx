@@ -3,6 +3,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
+import { AuthProvider } from './api/auth-context';
 import './styles.css';
 
 const queryClient = new QueryClient({
@@ -23,7 +24,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           v7_relativeSplatPath: true,
         }}
       >
-        <App />
+        <AuthProvider>
+          <App />
+        </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
   </React.StrictMode>,

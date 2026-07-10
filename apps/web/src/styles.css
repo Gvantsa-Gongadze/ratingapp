@@ -45,6 +45,15 @@ body {
   text-decoration: none;
 }
 
+.nav-logout {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--text-dim);
+  font: inherit;
+  cursor: pointer;
+}
+
 .app-main {
   max-width: 720px;
   margin: 0 auto;
@@ -185,8 +194,28 @@ body {
   cursor: not-allowed;
 }
 
-.auth-page h1 {
+.auth-tabs {
+  display: flex;
+  gap: 0.5rem;
   margin-bottom: 1.5rem;
+  border-bottom: 1px solid #2c2c35;
+}
+
+.auth-tabs button {
+  padding: 0.6rem 0.25rem;
+  margin-right: 1.25rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-dim);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.auth-tabs button.active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
 }
 
 .auth-form {
@@ -239,12 +268,3 @@ body {
   margin: 0;
 }
 
-.auth-switch {
-  margin-top: 1.5rem;
-  font-size: 0.9rem;
-  color: var(--text-dim);
-}
-
-.auth-switch a {
-  color: var(--accent);
-}
