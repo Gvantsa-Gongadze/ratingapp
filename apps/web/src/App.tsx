@@ -1,5 +1,5 @@
 import { lazy } from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { CurrentMoviePage } from './features/current-movie/CurrentMoviePage';
 
@@ -24,7 +24,8 @@ export default function App() {
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Route index element={<CurrentMoviePage />} />
+        <Route index element={<Navigate to="/home" replace />} />
+        <Route path="home" element={<CurrentMoviePage />} />
         <Route path="auth" element={<AuthPage />} />
         <Route path="rankings" element={<RankingsPage />} />
         <Route path="movies/:id" element={<MovieDetailPage />} />

@@ -15,11 +15,11 @@ export function Layout() {
   return (
     <div className="app-shell">
       <header className="app-header">
-        <Link to="/" className="app-logo">
+        <Link to="/home" className="app-logo">
           RatingApp
         </Link>
         <nav>
-          <Link to="/">Today's movie</Link>
+          <Link to="/home">Today's movie</Link>
           {isAuthenticated && (
             <>
               <Link to="/rankings">Rankings</Link>

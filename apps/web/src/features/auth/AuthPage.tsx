@@ -44,7 +44,7 @@ function LoginForm() {
     mutationFn: login,
     onSuccess: (data) => {
       setAuthenticated(data.accessToken, data.refreshToken);
-      navigate('/');
+      navigate('/home');
     },
   });
 
@@ -101,7 +101,7 @@ function RegisterForm() {
     mutationFn: register,
     onSuccess: (data) => {
       setAuthenticated(data.accessToken, data.refreshToken);
-      navigate('/');
+      navigate('/home');
     },
   });
 
