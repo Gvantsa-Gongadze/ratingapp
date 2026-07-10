@@ -8,7 +8,6 @@ import { Rating } from '../ratings/entities/rating.entity';
 /** Bayesian prior weight — keeps a single 10/10 rating from topping the chart. */
 const MIN_VOTES_FOR_CONFIDENCE = 3;
 const MAX_RESULTS = 50;
-const DAY_MS = 24 * 60 * 60 * 1000;
 
 interface RawRankingRow {
   movieId: string;
@@ -82,16 +81,42 @@ export class RankingsService {
     return (v / (v + m)) * avgScore + (m / (v + m)) * globalMean;
   }
 
+  /**
+   * Calendar boundaries (not rolling windows) so "Today" flips over at
+   * midnight rather than 24 hours after your last rating. Uses the
+   * server's local timezone since there's no per-user timezone yet.
+   */
   private cutoffFor(period: RankingPeriod): Date | null {
     switch (period) {
       case 'daily':
-        return new Date(Date.now() - DAY_MS);
+        return this.startOfDay(new Date());
       case 'weekly':
-        return new Date(Date.now() - 7 * DAY_MS);
+        return this.startOfWeek(new Date());
       case 'monthly':
-        return new Date(Date.now() - 30 * DAY_MS);
+        return this.startOfMonth(new Date());
       case 'all':
         return null;
     }
+  }
+
+  private startOfDay(date: Date): Date {
+    const result = new Date(date);
+    result.setHours(0, 0, 0, 0);
+    return result;
+  }
+
+  /** Monday-start week, per ISO 8601. */
+  private startOfWeek(date: Date): Date {
+    const result = this.startOfDay(date);
+    const day = result.getDay();
+    const daysSinceMonday = day === 0 ? 6 : day - 1;
+    result.setDate(result.getDate() - daysSinceMonday);
+    return result;
+  }
+
+  private startOfMonth(date: Date): Date {
+    const result = this.startOfDay(date);
+    result.setDate(1);
+    return result;
   }
 }
