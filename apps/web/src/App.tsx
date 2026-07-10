@@ -2,6 +2,11 @@ import { Route, Routes } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { CurrentMoviePage } from './features/current-movie/CurrentMoviePage';
 import { RegisterPage } from './features/auth/RegisterPage';
+import { RankingsPage } from './features/rankings/RankingsPage';
+import { MovieDetailPage } from './features/movies/MovieDetailPage';
+import { GroupsPage } from './features/groups/GroupsPage';
+import { GroupDetailPage } from './features/groups/GroupDetailPage';
+import { UserProfilePage } from './features/profile/UserProfilePage';
 
 export default function App() {
   return (
@@ -9,11 +14,11 @@ export default function App() {
       <Route element={<Layout />}>
         <Route index element={<CurrentMoviePage />} />
         <Route path="auth" element={<RegisterPage />} />
-        {/* Coming next, in build order:
-            /rankings
-            /movies/:id
-            /groups, /groups/:id
-            /u/:username  */}
+        <Route path="rankings" element={<RankingsPage />} />
+        <Route path="movies/:id" element={<MovieDetailPage />} />
+        <Route path="groups" element={<GroupsPage />} />
+        <Route path="groups/:id" element={<GroupDetailPage />} />
+        <Route path="u/:username" element={<UserProfilePage />} />
       </Route>
     </Routes>
   );
