@@ -35,6 +35,11 @@ body {
   text-decoration: none;
 }
 
+.app-header nav {
+  display: flex;
+  gap: 1.25rem;
+}
+
 .app-header nav a {
   color: var(--text-dim);
   text-decoration: none;
@@ -62,4 +67,58 @@ body {
 
 .status-error {
   color: var(--error);
+}
+
+.auth-page h1 {
+  margin-bottom: 1.5rem;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 360px;
+}
+
+.auth-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
+.auth-form input {
+  padding: 0.6rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #2c2c35;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.auth-form input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.auth-form button {
+  padding: 0.65rem 1rem;
+  border-radius: 6px;
+  border: none;
+  background: var(--accent);
+  color: #14140f;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.auth-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.auth-error {
+  color: var(--error);
+  font-size: 0.9rem;
+  margin: 0;
 }

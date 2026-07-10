@@ -9,6 +9,7 @@ export function Layout() {
         </Link>
         <nav>
           <Link to="/">Today's movie</Link>
+          <Link to="/auth">Sign up</Link>
         </nav>
       </header>
       <main className="app-main">

@@ -9,7 +9,7 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "pnpm --parallel --filter ./apps/* dev",
+    "dev": "pnpm --parallel --filter ./apps/* --filter ./packages/* dev",
     "dev:api": "pnpm --filter @ratingapp/api dev",
     "dev:web": "pnpm --filter @ratingapp/web dev",
     "build": "pnpm -r build",

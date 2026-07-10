@@ -12,14 +12,12 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "incremental": true,
+    "tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
     "skipLibCheck": true,
     "strict": true,
     "strictPropertyInitialization": false,
     "forceConsistentCasingInFileNames": true,
-    "esModuleInterop": true,
-    "paths": {
-      "@ratingapp/shared-types": ["../../packages/shared-types/src"]
-    }
+    "esModuleInterop": true
   },
   "include": ["src/**/*"]
 }
