@@ -1,4 +1,4 @@
-import { getAccessToken } from './token-storage';
+import { clearTokens, getAccessToken } from './token-storage';
 
 const BASE = '/api';
 
@@ -23,6 +23,13 @@ export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> 
     credentials: 'include',
     ...init,
   });
+
+  if (res.status === 401 && accessToken) {
+    // The access token expired (or was rejected) — treat this the same as
+    // the user logging out rather than silently refreshing behind their back.
+    clearTokens();
+    window.dispatchEvent(new Event('auth:logout'));
+  }
 
   if (!res.ok) {
     const body = await res.json().catch(() => null);
