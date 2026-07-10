@@ -1,7 +1,9 @@
-import type { RankingEntryDto, RankingPeriod } from '@ratingapp/shared-types';
+import type { PaginatedRankings, RankingPeriod } from '@ratingapp/shared-types';
 import { apiFetch } from './client';
 
-export function fetchRankings(period: RankingPeriod) {
+export function fetchRankings(period: RankingPeriod, page = 1) {
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  return apiFetch<RankingEntryDto[]>(`/rankings?period=${period}&tz=${encodeURIComponent(tz)}`);
+  return apiFetch<PaginatedRankings>(
+    `/rankings?period=${period}&page=${page}&tz=${encodeURIComponent(tz)}`,
+  );
 }

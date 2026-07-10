@@ -1,13 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import type { RankingEntryDto, RankingPeriod } from '@ratingapp/shared-types';
+import type { PaginatedRankings, RankingPeriod } from '@ratingapp/shared-types';
 import { Repository } from 'typeorm';
 import { buildPosterUrl } from '../movies/movies.service';
 import { Rating } from '../ratings/entities/rating.entity';
 
 /** Bayesian prior weight — keeps a single 10/10 rating from topping the chart. */
 const MIN_VOTES_FOR_CONFIDENCE = 3;
-const MAX_RESULTS = 50;
+const DEFAULT_PAGE_SIZE = 10;
+const MAX_PAGE_SIZE = 100;
 
 interface RawRankingRow {
   movieId: string;
@@ -26,7 +27,14 @@ export class RankingsService {
     private readonly ratingsRepository: Repository<Rating>,
   ) {}
 
-  async getRankings(period: RankingPeriod = 'all', timeZone?: string): Promise<RankingEntryDto[]> {
+  async getRankings(
+    period: RankingPeriod = 'all',
+    timeZone?: string,
+    page = 1,
+    pageSize = DEFAULT_PAGE_SIZE,
+  ): Promise<PaginatedRankings> {
+    const safePage = Math.max(1, Math.floor(page));
+    const safePageSize = Math.min(MAX_PAGE_SIZE, Math.max(1, Math.floor(pageSize)));
     const cutoff = this.cutoffFor(period, this.resolveTimeZone(timeZone));
 
     const qb = this.ratingsRepository
@@ -54,25 +62,33 @@ export class RankingsService {
       ratingsCount: Number(row.ratingsCount),
     }));
 
-    if (rows.length === 0) return [];
+    if (rows.length === 0) {
+      return { items: [], page: safePage, pageSize: safePageSize, total: 0, totalPages: 0 };
+    }
 
     const totalRatings = rows.reduce((sum, row) => sum + row.ratingsCount, 0);
     const globalMean = rows.reduce((sum, row) => sum + row.avgScore * row.ratingsCount, 0) / totalRatings;
 
-    return rows
+    const ranked = rows
       .map((row) => ({ ...row, weightedScore: this.weightedScore(row.avgScore, row.ratingsCount, globalMean) }))
-      .sort((a, b) => new Date(b.latestRatedAt).getTime() - new Date(a.latestRatedAt).getTime())
-      .slice(0, MAX_RESULTS)
-      .map((row, index) => ({
-        rank: index + 1,
-        movieId: row.movieId,
-        title: row.title,
-        year: row.year ?? 0,
-        posterUrl: buildPosterUrl(row.posterPath),
-        weightedScore: Math.round(row.weightedScore * 10) / 10,
-        ratingsCount: row.ratingsCount,
-        ratedAt: new Date(row.latestRatedAt).toISOString(),
-      }));
+      .sort((a, b) => new Date(b.latestRatedAt).getTime() - new Date(a.latestRatedAt).getTime());
+
+    const total = ranked.length;
+    const totalPages = Math.ceil(total / safePageSize);
+    const offset = (safePage - 1) * safePageSize;
+
+    const items = ranked.slice(offset, offset + safePageSize).map((row, index) => ({
+      rank: offset + index + 1,
+      movieId: row.movieId,
+      title: row.title,
+      year: row.year ?? 0,
+      posterUrl: buildPosterUrl(row.posterPath),
+      weightedScore: Math.round(row.weightedScore * 10) / 10,
+      ratingsCount: row.ratingsCount,
+      ratedAt: new Date(row.latestRatedAt).toISOString(),
+    }));
+
+    return { items, page: safePage, pageSize: safePageSize, total, totalPages };
   }
 
   private weightedScore(avgScore: number, ratingsCount: number, globalMean: number): number {

@@ -29,10 +29,16 @@ function formatRelativeTime(iso: string): string {
 
 export function RankingsPage() {
   const [period, setPeriod] = useState<RankingPeriod>('daily');
+  const [page, setPage] = useState(1);
+
+  function handlePeriodChange(next: RankingPeriod) {
+    setPeriod(next);
+    setPage(1);
+  }
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['rankings', period],
-    queryFn: () => fetchRankings(period),
+    queryKey: ['rankings', period, page],
+    queryFn: () => fetchRankings(period, page),
   });
 
   // Best-effort: unauthenticated visitors just won't see a "You" score.
@@ -58,7 +64,7 @@ export function RankingsPage() {
             key={p.value}
             type="button"
             className={period === p.value ? 'active' : ''}
-            onClick={() => setPeriod(p.value)}
+            onClick={() => handlePeriodChange(p.value)}
           >
             {p.label}
           </button>
@@ -73,54 +79,80 @@ export function RankingsPage() {
         </p>
       )}
 
-      {data && data.length === 0 && (
+      {data && data.items.length === 0 && (
         <p className="placeholder-copy">No ratings yet for this period.</p>
       )}
 
-      {data && data.length > 0 && (
-        <ol className="ranking-list">
-          {data.map((entry) => {
-            const myRating = myRatingByMovieId.get(entry.movieId);
-            return (
-              <li key={entry.movieId} className="ranking-row">
-                <span className="ranking-rank">{entry.rank}</span>
-                {entry.posterUrl && (
-                  <img
-                    className="ranking-poster"
-                    src={entry.posterUrl}
-                    alt={`${entry.title} poster`}
-                    loading="lazy"
-                    decoding="async"
-                  />
-                )}
-                <div className="ranking-info">
-                  <span className="ranking-title">
-                    {entry.title} <span className="movie-year">({entry.year})</span>
-                  </span>
-                  <span className="ranking-meta">
-                    {entry.ratingsCount} rating{entry.ratingsCount === 1 ? '' : 's'}
-                  </span>
-                  {myRating?.review && <p className="rating-review">{myRating.review}</p>}
-                </div>
-                <div className="ranking-scores">
-                  <div className="score-block">
-                    <span className="score-value">{entry.weightedScore.toFixed(1)}</span>
-                    <span className="score-label">Everyone</span>
-                  </div>
-                  <div className="score-block">
-                    <span className="score-value">
-                      {myRating !== undefined ? myRating.score.toFixed(1) : '—'}
+      {data && data.items.length > 0 && (
+        <>
+          <ol className="ranking-list">
+            {data.items.map((entry) => {
+              const myRating = myRatingByMovieId.get(entry.movieId);
+              return (
+                <li key={entry.movieId} className="ranking-row">
+                  <span className="ranking-rank">{entry.rank}</span>
+                  {entry.posterUrl && (
+                    <img
+                      className="ranking-poster"
+                      src={entry.posterUrl}
+                      alt={`${entry.title} poster`}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  )}
+                  <div className="ranking-info">
+                    <span className="ranking-title">
+                      {entry.title} <span className="movie-year">({entry.year})</span>
                     </span>
-                    <span className="score-label">You</span>
+                    <span className="ranking-meta">
+                      {entry.ratingsCount} rating{entry.ratingsCount === 1 ? '' : 's'}
+                    </span>
+                    {myRating?.review && <p className="rating-review">{myRating.review}</p>}
                   </div>
-                </div>
-                <span className="ranking-timestamp" title={new Date(entry.ratedAt).toLocaleString()}>
-                  {formatRelativeTime(entry.ratedAt)}
-                </span>
-              </li>
-            );
-          })}
-        </ol>
+                  <div className="ranking-scores">
+                    <div className="score-block">
+                      <span className="score-value">{entry.weightedScore.toFixed(1)}</span>
+                      <span className="score-label">Everyone</span>
+                    </div>
+                    <div className="score-block">
+                      <span className="score-value">
+                        {myRating !== undefined ? myRating.score.toFixed(1) : '—'}
+                      </span>
+                      <span className="score-label">You</span>
+                    </div>
+                  </div>
+                  <span className="ranking-timestamp" title={new Date(entry.ratedAt).toLocaleString()}>
+                    {formatRelativeTime(entry.ratedAt)}
+                  </span>
+                </li>
+              );
+            })}
+          </ol>
+
+          {data.totalPages > 1 && (
+            <div className="pagination">
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setPage((p) => p - 1)}
+                disabled={data.page <= 1}
+              >
+                Previous
+              </button>
+              <span className="pagination-status">
+                Page {data.page} of {data.totalPages}
+              </span>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setPage((p) => p + 1)}
+                disabled={data.page >= data.totalPages}
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </>
       )}
     </section>
   );

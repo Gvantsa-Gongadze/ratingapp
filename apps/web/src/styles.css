@@ -216,6 +216,19 @@ body {
   cursor: not-allowed;
 }
 
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.pagination-status {
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
 .tabs {
   display: flex;
   gap: 0.5rem;

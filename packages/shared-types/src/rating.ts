@@ -38,3 +38,11 @@ export interface RankingEntryDto {
   /** ISO 8601 timestamp of the most recent rating this movie received. */
   ratedAt: string;
 }
+
+export interface PaginatedRankings {
+  items: RankingEntryDto[];
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+}
