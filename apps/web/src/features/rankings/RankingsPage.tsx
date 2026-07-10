@@ -27,9 +27,9 @@ export function RankingsPage() {
     retry: false,
   });
 
-  const myScoreByMovieId = useMemo(() => {
-    const map = new Map<string, number>();
-    myRatings?.forEach((rating) => map.set(rating.movie.id, rating.score));
+  const myRatingByMovieId = useMemo(() => {
+    const map = new Map<string, { score: number; review: string | null }>();
+    myRatings?.forEach((rating) => map.set(rating.movie.id, { score: rating.score, review: rating.review }));
     return map;
   }, [myRatings]);
 
@@ -65,7 +65,7 @@ export function RankingsPage() {
       {data && data.length > 0 && (
         <ol className="ranking-list">
           {data.map((entry) => {
-            const myScore = myScoreByMovieId.get(entry.movieId);
+            const myRating = myRatingByMovieId.get(entry.movieId);
             return (
               <li key={entry.movieId} className="ranking-row">
                 <span className="ranking-rank">{entry.rank}</span>
@@ -79,6 +79,7 @@ export function RankingsPage() {
                   <span className="ranking-meta">
                     {entry.ratingsCount} rating{entry.ratingsCount === 1 ? '' : 's'}
                   </span>
+                  {myRating?.review && <p className="rating-review">{myRating.review}</p>}
                 </div>
                 <div className="ranking-scores">
                   <div className="score-block">
@@ -86,7 +87,9 @@ export function RankingsPage() {
                     <span className="score-label">Everyone</span>
                   </div>
                   <div className="score-block">
-                    <span className="score-value">{myScore !== undefined ? myScore.toFixed(1) : '—'}</span>
+                    <span className="score-value">
+                      {myRating !== undefined ? myRating.score.toFixed(1) : '—'}
+                    </span>
                     <span className="score-label">You</span>
                   </div>
                 </div>

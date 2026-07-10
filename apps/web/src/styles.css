@@ -341,6 +341,13 @@ body {
   color: var(--text-dim);
 }
 
+.rating-review {
+  margin: 0.15rem 0 0;
+  font-size: 0.9rem;
+  color: var(--text);
+  line-height: 1.4;
+}
+
 .ranking-scores {
   display: flex;
   gap: 1.5rem;
