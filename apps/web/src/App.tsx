@@ -1,6 +1,7 @@
 import { Route, Routes } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { CurrentMoviePage } from './features/current-movie/CurrentMoviePage';
+import { LoginPage } from './features/auth/LoginPage';
 import { RegisterPage } from './features/auth/RegisterPage';
 import { RankingsPage } from './features/rankings/RankingsPage';
 import { MovieDetailPage } from './features/movies/MovieDetailPage';
@@ -14,6 +15,7 @@ export default function App() {
       <Route element={<Layout />}>
         <Route index element={<CurrentMoviePage />} />
         <Route path="auth" element={<RegisterPage />} />
+        <Route path="auth/login" element={<LoginPage />} />
         <Route path="rankings" element={<RankingsPage />} />
         <Route path="movies/:id" element={<MovieDetailPage />} />
         <Route path="groups" element={<GroupsPage />} />

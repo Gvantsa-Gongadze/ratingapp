@@ -1,18 +1,17 @@
 import { useMutation } from '@tanstack/react-query';
 import { FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { register } from '../../api/auth';
+import { login } from '../../api/auth';
 import { ApiError } from '../../api/client';
 import { saveTokens } from '../../api/token-storage';
 
-export function RegisterPage() {
+export function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
-  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
   const mutation = useMutation({
-    mutationFn: register,
+    mutationFn: login,
     onSuccess: (data) => {
       saveTokens(data.accessToken, data.refreshToken);
       navigate('/');
@@ -21,12 +20,12 @@ export function RegisterPage() {
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    mutation.mutate({ email, username, password });
+    mutation.mutate({ email, password });
   }
 
   return (
     <section className="auth-page">
-      <h1>Create your account</h1>
+      <h1>Log in</h1>
       <form className="auth-form" onSubmit={handleSubmit}>
         <label>
           Email
@@ -40,25 +39,11 @@ export function RegisterPage() {
         </label>
 
         <label>
-          Username
-          <input
-            type="text"
-            required
-            autoComplete="username"
-            pattern="[a-zA-Z0-9_]{3,20}"
-            title="3-20 characters: letters, numbers, underscores"
-            value={username}
-            onChange={(event) => setUsername(event.target.value)}
-          />
-        </label>
-
-        <label>
           Password
           <input
             type="password"
             required
-            minLength={8}
-            autoComplete="new-password"
+            autoComplete="current-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
           />
@@ -71,12 +56,12 @@ export function RegisterPage() {
         )}
 
         <button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? 'Creating account…' : 'Create account'}
+          {mutation.isPending ? 'Logging in…' : 'Log in'}
         </button>
       </form>
 
       <p className="auth-switch">
-        Already have an account? <Link to="/auth/login">Log in</Link>
+        Need an account? <Link to="/auth">Sign up</Link>
       </p>
     </section>
   );

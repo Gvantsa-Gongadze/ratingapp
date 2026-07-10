@@ -11,6 +11,7 @@ export function Layout() {
           <Link to="/">Today's movie</Link>
           <Link to="/rankings">Rankings</Link>
           <Link to="/groups">Groups</Link>
+          <Link to="/auth/login">Log in</Link>
           <Link to="/auth">Sign up</Link>
         </nav>
       </header>

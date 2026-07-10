@@ -238,3 +238,13 @@ body {
   font-size: 0.9rem;
   margin: 0;
 }
+
+.auth-switch {
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
+.auth-switch a {
+  color: var(--accent);
+}
