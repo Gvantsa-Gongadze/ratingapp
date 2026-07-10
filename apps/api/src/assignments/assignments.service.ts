@@ -133,7 +133,8 @@ export class AssignmentsService {
     return new Set(rows.map((r) => r.tmdbId));
   }
 
-  private toDto(assignment: Assignment): AssignmentDto {
+  private async toDto(assignment: Assignment): Promise<AssignmentDto> {
+    const communityRating = await this.ratingsService.getMovieStats(assignment.movieId);
     return {
       id: assignment.id,
       movie: this.moviesService.toDto(assignment.movie),
@@ -141,6 +142,7 @@ export class AssignmentsService {
       assignedAt: assignment.assignedAt.toISOString(),
       deadlineAt: assignment.deadlineAt.toISOString(),
       status: assignment.status,
+      communityRating,
     };
   }
 }

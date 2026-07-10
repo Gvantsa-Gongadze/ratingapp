@@ -10,6 +10,8 @@ export interface MovieDto {
   overview: string;
   /** Outbound links generated from stored IDs */
   links: MovieLinks;
+  /** TMDB's own public rating, as fetched from TMDB — null if unavailable. */
+  tmdbRating: { average: number; voteCount: number } | null;
 }
 
 export interface MovieLinks {

@@ -72,6 +72,10 @@ export class MoviesService {
         imdb: movie.imdbId ? `https://www.imdb.com/title/${movie.imdbId}/` : null,
         letterboxd: `https://letterboxd.com/tmdb/${movie.tmdbId}/`,
       },
+      tmdbRating:
+        movie.tmdbVoteAvg != null && movie.tmdbVoteCount != null
+          ? { average: movie.tmdbVoteAvg, voteCount: movie.tmdbVoteCount }
+          : null,
     };
   }
 }

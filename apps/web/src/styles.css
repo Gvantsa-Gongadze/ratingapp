@@ -133,6 +133,18 @@ body {
   font-size: 0.9rem;
 }
 
+.movie-tmdb-rating {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
+.movie-community-rating {
+  margin-top: 0.25rem;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
 .rate-form {
   display: flex;
   flex-direction: column;

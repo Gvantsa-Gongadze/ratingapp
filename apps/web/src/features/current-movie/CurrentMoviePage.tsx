@@ -127,6 +127,21 @@ export function CurrentMoviePage() {
               Letterboxd
             </a>
           </div>
+
+          {data.movie.tmdbRating && (
+            <p className="movie-tmdb-rating">
+              TMDB rating: {data.movie.tmdbRating.average.toFixed(1)}/10 (
+              {data.movie.tmdbRating.voteCount.toLocaleString()} votes)
+            </p>
+          )}
+
+          {data.communityRating && (
+            <p className="movie-community-rating">
+              Community: {data.communityRating.averageScore.toFixed(1)}/10 (
+              {data.communityRating.ratingsCount} rating
+              {data.communityRating.ratingsCount === 1 ? '' : 's'})
+            </p>
+          )}
         </div>
       </div>
 

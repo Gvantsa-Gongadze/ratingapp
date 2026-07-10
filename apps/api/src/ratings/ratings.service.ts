@@ -41,4 +41,21 @@ export class RatingsService {
       ratedAt: rating.ratedAt.toISOString(),
     }));
   }
+
+  async getMovieStats(movieId: string): Promise<{ averageScore: number; ratingsCount: number } | null> {
+    const result = await this.ratingsRepository
+      .createQueryBuilder('rating')
+      .select('AVG(rating.score)', 'avgScore')
+      .addSelect('COUNT(rating.id)', 'ratingsCount')
+      .where('rating.movie_id = :movieId', { movieId })
+      .getRawOne<{ avgScore: string | null; ratingsCount: string }>();
+
+    const ratingsCount = Number(result?.ratingsCount ?? 0);
+    if (ratingsCount === 0) return null;
+
+    return {
+      averageScore: Math.round(Number(result?.avgScore) * 10) / 10,
+      ratingsCount,
+    };
+  }
 }

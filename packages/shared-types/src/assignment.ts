@@ -9,4 +9,6 @@ export interface AssignmentDto {
   assignedAt: string;
   deadlineAt: string;
   status: AssignmentStatus;
+  /** Aggregate rating from everyone who has rated this movie, null if no one has yet. */
+  communityRating: { averageScore: number; ratingsCount: number } | null;
 }
