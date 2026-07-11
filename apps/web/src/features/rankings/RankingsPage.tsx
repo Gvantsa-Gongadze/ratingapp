@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { RankingPeriod } from '@ratingapp/shared-types';
 import { useMemo, useState } from 'react';
 import { fetchRankings } from '../../api/rankings';
@@ -36,9 +36,10 @@ export function RankingsPage() {
     setPage(1);
   }
 
-  const { data, isLoading, isError, error } = useQuery({
+  const { data, isLoading, isFetching, isError, error } = useQuery({
     queryKey: ['rankings', period, page],
     queryFn: () => fetchRankings(period, page),
+    placeholderData: keepPreviousData,
   });
 
   // Best-effort: unauthenticated visitors just won't see a "You" score.
@@ -85,7 +86,7 @@ export function RankingsPage() {
 
       {data && data.items.length > 0 && (
         <>
-          <ol className="ranking-list">
+          <ol className={isFetching ? 'ranking-list ranking-list--fetching' : 'ranking-list'}>
             {data.items.map((entry) => {
               const myRating = myRatingByMovieId.get(entry.movieId);
               return (
