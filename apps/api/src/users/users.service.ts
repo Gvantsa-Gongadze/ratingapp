@@ -33,4 +33,24 @@ export class UsersService {
     const user = this.usersRepository.create(data);
     return this.usersRepository.save(user);
   }
+
+  findByResetTokenHash(tokenHash: string): Promise<User | null> {
+    return this.usersRepository.findOneBy({ resetPasswordTokenHash: tokenHash });
+  }
+
+  async setResetToken(userId: string, tokenHash: string, expiresAt: Date): Promise<void> {
+    await this.usersRepository.update(userId, {
+      resetPasswordTokenHash: tokenHash,
+      resetPasswordExpiresAt: expiresAt,
+    });
+  }
+
+  /** Sets a new password and invalidates the reset token in one step. */
+  async resetPassword(userId: string, passwordHash: string): Promise<void> {
+    await this.usersRepository.update(userId, {
+      passwordHash,
+      resetPasswordTokenHash: null,
+      resetPasswordExpiresAt: null,
+    });
+  }
 }

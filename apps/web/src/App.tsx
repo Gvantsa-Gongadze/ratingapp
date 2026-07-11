@@ -6,6 +6,9 @@ import { CurrentMoviePage } from './features/current-movie/CurrentMoviePage';
 // Code-split every route except the index page, which loads eagerly anyway
 // since it's what most visits land on first.
 const AuthPage = lazy(() => import('./features/auth/AuthPage').then((m) => ({ default: m.AuthPage })));
+const ResetPasswordPage = lazy(() =>
+  import('./features/auth/ResetPasswordPage').then((m) => ({ default: m.ResetPasswordPage })),
+);
 const RankingsPage = lazy(() =>
   import('./features/rankings/RankingsPage').then((m) => ({ default: m.RankingsPage })),
 );
@@ -27,6 +30,7 @@ export default function App() {
         <Route index element={<Navigate to="/home" replace />} />
         <Route path="home" element={<CurrentMoviePage />} />
         <Route path="auth" element={<AuthPage />} />
+        <Route path="auth/reset-password" element={<ResetPasswordPage />} />
         <Route path="rankings" element={<RankingsPage />} />
         <Route path="movies/:id" element={<MovieDetailPage />} />
         <Route path="groups" element={<GroupsPage />} />

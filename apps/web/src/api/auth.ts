@@ -1,4 +1,11 @@
-import type { AuthResponseDto, LoginRequest, RegisterRequest } from '@ratingapp/shared-types';
+import type {
+  AuthResponseDto,
+  ForgotPasswordRequest,
+  LoginRequest,
+  MessageResponseDto,
+  RegisterRequest,
+  ResetPasswordRequest,
+} from '@ratingapp/shared-types';
 import { apiFetch } from './client';
 
 export function register(data: RegisterRequest) {
@@ -10,6 +17,20 @@ export function register(data: RegisterRequest) {
 
 export function login(data: LoginRequest) {
   return apiFetch<AuthResponseDto>('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export function forgotPassword(data: ForgotPasswordRequest) {
+  return apiFetch<MessageResponseDto>('/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export function resetPassword(data: ResetPasswordRequest) {
+  return apiFetch<MessageResponseDto>('/auth/reset-password', {
     method: 'POST',
     body: JSON.stringify(data),
   });

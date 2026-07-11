@@ -1,20 +1,26 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import type { AuthResponseDto, MeDto, UserDto } from '@ratingapp/shared-types';
 import * as bcrypt from 'bcrypt';
+import { createHash, randomBytes } from 'crypto';
+import { EmailService } from '../email/email.service';
 import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
 import { JwtPayload } from './jwt-payload.interface';
 
 const SALT_ROUNDS = 10;
+const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
+    private readonly emailService: EmailService,
   ) {}
 
   async register(email: string, username: string, password: string): Promise<AuthResponseDto> {
@@ -58,6 +64,38 @@ export class AuthService {
       throw new UnauthorizedException('Invalid refresh token');
     }
     return this.buildAuthResponse(user);
+  }
+
+  /**
+   * Always resolves without error, even for unregistered emails — the caller
+   * must not be able to tell which emails exist from the response.
+   */
+  async forgotPassword(email: string): Promise<void> {
+    const user = await this.usersService.findByEmail(email);
+    if (!user) return;
+
+    const rawToken = randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + RESET_TOKEN_TTL_MS);
+    await this.usersService.setResetToken(user.id, this.hashResetToken(rawToken), expiresAt);
+
+    const webOrigin = this.config.get<string>('CORS_ORIGIN', 'http://localhost:5173');
+    const resetUrl = `${webOrigin}/auth/reset-password?token=${rawToken}`;
+    this.logger.log(`Password reset requested for ${email}`);
+    await this.emailService.sendPasswordReset(email, resetUrl);
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    const user = await this.usersService.findByResetTokenHash(this.hashResetToken(token));
+    if (!user || !user.resetPasswordExpiresAt || user.resetPasswordExpiresAt.getTime() < Date.now()) {
+      throw new BadRequestException('Invalid or expired reset link');
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+    await this.usersService.resetPassword(user.id, passwordHash);
+  }
+
+  private hashResetToken(token: string): string {
+    return createHash('sha256').update(token).digest('hex');
   }
 
   toMeDto(user: User): MeDto {
