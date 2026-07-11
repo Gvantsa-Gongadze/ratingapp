@@ -1,6 +1,6 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { RankingEntryDto, RankingPeriod } from '@ratingapp/shared-types';
-import { useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { fetchMovieReviews, fetchRankings } from '../../api/rankings';
 import { fetchMyRatings } from '../../api/ratings';
 import { ApiError } from '../../api/client';
@@ -31,6 +31,28 @@ export function RankingsPage() {
   const [period, setPeriod] = useState<RankingPeriod>('daily');
   const [page, setPage] = useState(1);
 
+  const tabRefs = useRef<Record<RankingPeriod, HTMLButtonElement | null>>({
+    daily: null,
+    weekly: null,
+    monthly: null,
+    all: null,
+  });
+  const [indicator, setIndicator] = useState({ left: 0, width: 0 });
+
+  useLayoutEffect(() => {
+    const el = tabRefs.current[period];
+    if (el) setIndicator({ left: el.offsetLeft, width: el.offsetWidth });
+  }, [period]);
+
+  useEffect(() => {
+    function handleResize() {
+      const el = tabRefs.current[period];
+      if (el) setIndicator({ left: el.offsetLeft, width: el.offsetWidth });
+    }
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [period]);
+
   function handlePeriodChange(next: RankingPeriod) {
     setPeriod(next);
     setPage(1);
@@ -59,10 +81,17 @@ export function RankingsPage() {
     <section className="rankings-page">
       <h1>Rankings</h1>
 
-      <div className="tabs">
+      <div className="tabs tabs--sliding">
+        <span
+          className="tab-indicator"
+          style={{ transform: `translateX(${indicator.left}px)`, width: indicator.width }}
+        />
         {PERIODS.map((p) => (
           <button
             key={p.value}
+            ref={(el) => {
+              tabRefs.current[p.value] = el;
+            }}
             type="button"
             className={period === p.value ? 'active' : ''}
             onClick={() => handlePeriodChange(p.value)}

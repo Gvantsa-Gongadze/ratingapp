@@ -230,6 +230,7 @@ body {
 }
 
 .tabs {
+  position: relative;
   display: flex;
   gap: 0.5rem;
   margin-bottom: 1.5rem;
@@ -254,6 +255,22 @@ body {
 .tabs button.active {
   color: var(--text);
   border-bottom-color: var(--accent);
+}
+
+.tabs--sliding button.active {
+  border-bottom-color: transparent;
+}
+
+.tab-indicator {
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--accent);
+  transition:
+    transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
 }
 
 .auth-form {
