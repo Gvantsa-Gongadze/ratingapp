@@ -1,5 +1,6 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type { RankingEntryDto, RankingPeriod } from '@ratingapp/shared-types';
+import type { CSSProperties } from 'react';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { fetchMovieReviews, fetchRankings } from '../../api/rankings';
 import { fetchMyRatings } from '../../api/ratings';
@@ -38,11 +39,25 @@ export function RankingsPage() {
     all: null,
   });
   const [indicator, setIndicator] = useState({ left: 0, width: 0 });
+  const periodIndexRef = useRef(PERIODS.findIndex((p) => p.value === period));
+  const [slideDirection, setSlideDirection] = useState(1);
+  const [transitionKey, setTransitionKey] = useState(0);
+  const listRef = useRef<HTMLOListElement>(null);
 
   useLayoutEffect(() => {
     const el = tabRefs.current[period];
     if (el) setIndicator({ left: el.offsetLeft, width: el.offsetWidth });
   }, [period]);
+
+  // Restart the slide-in animation on the existing DOM nodes (rather than
+  // remounting via `key`) so posters don't flash/re-decode on every switch.
+  useLayoutEffect(() => {
+    const el = listRef.current;
+    if (!el) return;
+    el.classList.remove('ranking-list--sliding');
+    void el.offsetWidth;
+    el.classList.add('ranking-list--sliding');
+  }, [transitionKey]);
 
   useEffect(() => {
     function handleResize() {
@@ -54,6 +69,11 @@ export function RankingsPage() {
   }, [period]);
 
   function handlePeriodChange(next: RankingPeriod) {
+    if (next === period) return;
+    const nextIndex = PERIODS.findIndex((p) => p.value === next);
+    setSlideDirection(nextIndex > periodIndexRef.current ? 1 : -1);
+    periodIndexRef.current = nextIndex;
+    setTransitionKey((k) => k + 1);
     setPeriod(next);
     setPage(1);
   }
@@ -115,7 +135,15 @@ export function RankingsPage() {
 
       {data && data.items.length > 0 && (
         <>
-          <ol className={isFetching ? 'ranking-list ranking-list--fetching' : 'ranking-list'}>
+          <ol
+            ref={listRef}
+            className={
+              isFetching
+                ? 'ranking-list ranking-list--fetching ranking-list--sliding'
+                : 'ranking-list ranking-list--sliding'
+            }
+            style={{ '--slide-from': `${slideDirection * 24}px` } as CSSProperties}
+          >
             {data.items.map((entry) => (
               <RankingRow
                 key={entry.movieId}

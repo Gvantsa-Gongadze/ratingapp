@@ -352,6 +352,22 @@ body {
   opacity: 0.5;
 }
 
+.ranking-list--sliding {
+  animation: ranking-slide-in 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform, opacity;
+}
+
+@keyframes ranking-slide-in {
+  from {
+    transform: translateX(var(--slide-from, 24px));
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
 .ranking-item {
   padding: 0.9rem 1.1rem;
   background: var(--surface);
