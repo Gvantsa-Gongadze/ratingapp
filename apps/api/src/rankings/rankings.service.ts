@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import type { PaginatedRankings, RankingPeriod } from '@ratingapp/shared-types';
-import { Repository } from 'typeorm';
+import type { MovieReviewDto, PaginatedRankings, RankingPeriod } from '@ratingapp/shared-types';
+import { IsNull, MoreThanOrEqual, Not, Repository } from 'typeorm';
 import { buildPosterUrl } from '../movies/movies.service';
 import { Rating } from '../ratings/entities/rating.entity';
+
+const MAX_REVIEWS = 50;
 
 /** Bayesian prior weight — keeps a single 10/10 rating from topping the chart. */
 const MIN_VOTES_FOR_CONFIDENCE = 3;
@@ -89,6 +91,35 @@ export class RankingsService {
     }));
 
     return { items, page: safePage, pageSize: safePageSize, total, totalPages };
+  }
+
+  /** Most recent written reviews for a movie, scoped to the same period as the ranking list. */
+  async getMovieReviews(
+    movieId: string,
+    period: RankingPeriod = 'all',
+    timeZone?: string,
+  ): Promise<MovieReviewDto[]> {
+    const cutoff = this.cutoffFor(period, this.resolveTimeZone(timeZone));
+
+    const ratings = await this.ratingsRepository.find({
+      where: {
+        movieId,
+        reviewText: Not(IsNull()),
+        ...(cutoff ? { ratedAt: MoreThanOrEqual(cutoff) } : {}),
+      },
+      relations: ['user'],
+      order: { ratedAt: 'DESC' },
+      take: MAX_REVIEWS,
+    });
+
+    return ratings.map((rating) => ({
+      userId: rating.user.id,
+      username: rating.user.username,
+      avatarUrl: rating.user.avatarUrl,
+      score: rating.score,
+      review: rating.reviewText as string,
+      ratedAt: rating.ratedAt.toISOString(),
+    }));
   }
 
   private weightedScore(avgScore: number, ratingsCount: number, globalMean: number): number {

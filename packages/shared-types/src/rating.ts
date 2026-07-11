@@ -46,3 +46,12 @@ export interface PaginatedRankings {
   total: number;
   totalPages: number;
 }
+
+export interface MovieReviewDto {
+  userId: string;
+  username: string;
+  avatarUrl: string | null;
+  score: number;
+  review: string;
+  ratedAt: string;
+}

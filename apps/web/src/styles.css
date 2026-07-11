@@ -334,12 +334,15 @@ body {
   opacity: 0.5;
 }
 
+.ranking-item {
+  padding: 0.6rem 0;
+  border-bottom: 1px solid #2c2c35;
+}
+
 .ranking-row {
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 0.6rem 0;
-  border-bottom: 1px solid #2c2c35;
 }
 
 .ranking-rank {
@@ -368,13 +371,69 @@ body {
   font-weight: 600;
 }
 
+.ranking-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
 .ranking-meta {
   font-size: 0.85rem;
   color: var(--text-dim);
 }
 
-.rating-review {
-  margin: 0.15rem 0 0;
+.reviews-toggle {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.8rem;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.reviews-toggle:hover {
+  text-decoration: underline;
+}
+
+.movie-reviews {
+  margin-top: 0.6rem;
+  padding-left: calc(1.75rem + 46px + 1rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.reviews-status {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.movie-review {
+  border-left: 2px solid #2c2c35;
+  padding-left: 0.75rem;
+}
+
+.movie-review-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.movie-review-author {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.movie-review-score {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.movie-review-text {
+  margin: 0.2rem 0 0;
   font-size: 0.9rem;
   color: var(--text);
   line-height: 1.4;

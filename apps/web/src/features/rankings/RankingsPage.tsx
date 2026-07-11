@@ -1,7 +1,7 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import type { RankingPeriod } from '@ratingapp/shared-types';
+import type { RankingEntryDto, RankingPeriod } from '@ratingapp/shared-types';
 import { useMemo, useState } from 'react';
-import { fetchRankings } from '../../api/rankings';
+import { fetchMovieReviews, fetchRankings } from '../../api/rankings';
 import { fetchMyRatings } from '../../api/ratings';
 import { ApiError } from '../../api/client';
 import { PageLoader } from '../../components/PageLoader';
@@ -50,8 +50,8 @@ export function RankingsPage() {
   });
 
   const myRatingByMovieId = useMemo(() => {
-    const map = new Map<string, { score: number; review: string | null }>();
-    myRatings?.forEach((rating) => map.set(rating.movie.id, { score: rating.score, review: rating.review }));
+    const map = new Map<string, { score: number }>();
+    myRatings?.forEach((rating) => map.set(rating.movie.id, { score: rating.score }));
     return map;
   }, [myRatings]);
 
@@ -87,47 +87,14 @@ export function RankingsPage() {
       {data && data.items.length > 0 && (
         <>
           <ol className={isFetching ? 'ranking-list ranking-list--fetching' : 'ranking-list'}>
-            {data.items.map((entry) => {
-              const myRating = myRatingByMovieId.get(entry.movieId);
-              return (
-                <li key={entry.movieId} className="ranking-row">
-                  <span className="ranking-rank">{entry.rank}</span>
-                  {entry.posterUrl && (
-                    <img
-                      className="ranking-poster"
-                      src={entry.posterUrl}
-                      alt={`${entry.title} poster`}
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  )}
-                  <div className="ranking-info">
-                    <span className="ranking-title">
-                      {entry.title} <span className="movie-year">({entry.year})</span>
-                    </span>
-                    <span className="ranking-meta">
-                      {entry.ratingsCount} rating{entry.ratingsCount === 1 ? '' : 's'}
-                    </span>
-                    {myRating?.review && <p className="rating-review">{myRating.review}</p>}
-                  </div>
-                  <div className="ranking-scores">
-                    <div className="score-block">
-                      <span className="score-value">{entry.weightedScore.toFixed(1)}</span>
-                      <span className="score-label">Everyone</span>
-                    </div>
-                    <div className="score-block">
-                      <span className="score-value">
-                        {myRating !== undefined ? myRating.score.toFixed(1) : '—'}
-                      </span>
-                      <span className="score-label">You</span>
-                    </div>
-                  </div>
-                  <span className="ranking-timestamp" title={new Date(entry.ratedAt).toLocaleString()}>
-                    {formatRelativeTime(entry.ratedAt)}
-                  </span>
-                </li>
-              );
-            })}
+            {data.items.map((entry) => (
+              <RankingRow
+                key={entry.movieId}
+                entry={entry}
+                period={period}
+                myRating={myRatingByMovieId.get(entry.movieId)}
+              />
+            ))}
           </ol>
 
           {data.totalPages > 1 && (
@@ -156,5 +123,83 @@ export function RankingsPage() {
         </>
       )}
     </section>
+  );
+}
+
+interface RankingRowProps {
+  entry: RankingEntryDto;
+  period: RankingPeriod;
+  myRating: { score: number } | undefined;
+}
+
+function RankingRow({ entry, period, myRating }: RankingRowProps) {
+  const [expanded, setExpanded] = useState(false);
+
+  const { data: reviews, isLoading: reviewsLoading } = useQuery({
+    queryKey: ['rankings', entry.movieId, 'reviews', period],
+    queryFn: () => fetchMovieReviews(entry.movieId, period),
+    enabled: expanded,
+    staleTime: 60_000,
+  });
+
+  return (
+    <li className="ranking-item">
+      <div className="ranking-row">
+        <span className="ranking-rank">{entry.rank}</span>
+        {entry.posterUrl && (
+          <img
+            className="ranking-poster"
+            src={entry.posterUrl}
+            alt={`${entry.title} poster`}
+            loading="lazy"
+            decoding="async"
+          />
+        )}
+        <div className="ranking-info">
+          <span className="ranking-title">
+            {entry.title} <span className="movie-year">({entry.year})</span>
+          </span>
+          <div className="ranking-meta-row">
+            <span className="ranking-meta">
+              {entry.ratingsCount} rating{entry.ratingsCount === 1 ? '' : 's'}
+            </span>
+            {entry.ratingsCount > 0 && (
+              <button type="button" className="reviews-toggle" onClick={() => setExpanded((v) => !v)}>
+                {expanded ? 'Hide reviews' : 'Show reviews'}
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="ranking-scores">
+          <div className="score-block">
+            <span className="score-value">{entry.weightedScore.toFixed(1)}</span>
+            <span className="score-label">Everyone</span>
+          </div>
+          <div className="score-block">
+            <span className="score-value">{myRating !== undefined ? myRating.score.toFixed(1) : '—'}</span>
+            <span className="score-label">You</span>
+          </div>
+        </div>
+        <span className="ranking-timestamp" title={new Date(entry.ratedAt).toLocaleString()}>
+          {formatRelativeTime(entry.ratedAt)}
+        </span>
+      </div>
+
+      {expanded && (
+        <div className="movie-reviews">
+          {reviewsLoading && <p className="reviews-status">Loading reviews…</p>}
+          {reviews && reviews.length === 0 && <p className="reviews-status">No written reviews yet.</p>}
+          {reviews?.map((review) => (
+            <div key={review.userId} className="movie-review">
+              <div className="movie-review-header">
+                <span className="movie-review-author">{review.username}</span>
+                <span className="movie-review-score">{review.score.toFixed(1)}</span>
+              </div>
+              <p className="movie-review-text">{review.review}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </li>
   );
 }
