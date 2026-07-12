@@ -8,15 +8,6 @@ export interface RateMovieRequest {
   ratedAt: string;
 }
 
-export interface RatingDto {
-  id: string;
-  movieId: string;
-  userId: string;
-  score: number;
-  review: string | null;
-  ratedAt: string;
-}
-
 export interface MyRatingDto {
   id: string;
   movie: MovieDto;
@@ -51,7 +42,6 @@ export interface PaginatedRankings {
 export interface MovieReviewDto {
   userId: string;
   username: string;
-  avatarUrl: string | null;
   score: number;
   review: string;
   ratedAt: string;

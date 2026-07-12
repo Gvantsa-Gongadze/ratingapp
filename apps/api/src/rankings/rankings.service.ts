@@ -119,7 +119,6 @@ export class RankingsService {
     return ratings.map((rating) => ({
       userId: rating.user.id,
       username: rating.user.username,
-      avatarUrl: rating.user.avatarUrl,
       score: rating.score,
       review: rating.reviewText as string,
       ratedAt: rating.ratedAt.toISOString(),
