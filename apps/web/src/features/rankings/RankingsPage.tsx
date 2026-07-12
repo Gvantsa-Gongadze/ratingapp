@@ -5,6 +5,8 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { fetchMovieReviews, fetchRankings } from '../../api/rankings';
 import { fetchMyRatings } from '../../api/ratings';
 import { ApiError } from '../../api/client';
+import { getCurrentUserId } from '../../api/token-storage';
+import { Modal } from '../../components/Modal';
 import { PageLoader } from '../../components/PageLoader';
 
 const PERIODS: { value: RankingPeriod; label: string }[] = [
@@ -97,6 +99,10 @@ export function RankingsPage() {
     return map;
   }, [myRatings]);
 
+  const currentUserId = getCurrentUserId();
+
+  const [openReviews, setOpenReviews] = useState<{ movieId: string; title: string } | null>(null);
+
   return (
     <section className="rankings-page">
       <h1>Rankings</h1>
@@ -148,8 +154,8 @@ export function RankingsPage() {
               <RankingRow
                 key={entry.movieId}
                 entry={entry}
-                period={period}
                 myRating={myRatingByMovieId.get(entry.movieId)}
+                onShowReviews={() => setOpenReviews({ movieId: entry.movieId, title: entry.title })}
               />
             ))}
           </ol>
@@ -179,26 +185,27 @@ export function RankingsPage() {
           )}
         </>
       )}
+
+      {openReviews && (
+        <MovieReviewsModal
+          movieId={openReviews.movieId}
+          title={openReviews.title}
+          period={period}
+          currentUserId={currentUserId}
+          onClose={() => setOpenReviews(null)}
+        />
+      )}
     </section>
   );
 }
 
 interface RankingRowProps {
   entry: RankingEntryDto;
-  period: RankingPeriod;
   myRating: { score: number } | undefined;
+  onShowReviews: () => void;
 }
 
-function RankingRow({ entry, period, myRating }: RankingRowProps) {
-  const [expanded, setExpanded] = useState(false);
-
-  const { data: reviews, isLoading: reviewsLoading } = useQuery({
-    queryKey: ['rankings', entry.movieId, 'reviews', period],
-    queryFn: () => fetchMovieReviews(entry.movieId, period),
-    enabled: expanded,
-    staleTime: 60_000,
-  });
-
+function RankingRow({ entry, myRating, onShowReviews }: RankingRowProps) {
   return (
     <li className="ranking-item">
       <div className="ranking-row">
@@ -220,9 +227,9 @@ function RankingRow({ entry, period, myRating }: RankingRowProps) {
             <span className="ranking-meta">
               {entry.ratingsCount} rating{entry.ratingsCount === 1 ? '' : 's'}
             </span>
-            {entry.ratingsCount > 0 && (
-              <button type="button" className="reviews-toggle" onClick={() => setExpanded((v) => !v)}>
-                {expanded ? 'Hide reviews' : 'Show reviews'}
+            {entry.reviewsCount > 0 && (
+              <button type="button" className="reviews-toggle" onClick={onShowReviews}>
+                Show reviews ({entry.reviewsCount})
               </button>
             )}
           </div>
@@ -241,12 +248,40 @@ function RankingRow({ entry, period, myRating }: RankingRowProps) {
           {formatRelativeTime(entry.ratedAt)}
         </span>
       </div>
+    </li>
+  );
+}
 
-      {expanded && (
+interface MovieReviewsModalProps {
+  movieId: string;
+  title: string;
+  period: RankingPeriod;
+  currentUserId: string | null;
+  onClose: () => void;
+}
+
+function MovieReviewsModal({ movieId, title, period, currentUserId, onClose }: MovieReviewsModalProps) {
+  const { data: reviews, isLoading } = useQuery({
+    queryKey: ['rankings', movieId, 'reviews', period],
+    queryFn: () => fetchMovieReviews(movieId, period),
+    staleTime: 60_000,
+  });
+
+  // Own review first, everyone else stays in the chronological order the API returns.
+  const sortedReviews = useMemo(() => {
+    if (!reviews || !currentUserId) return reviews;
+    const mine = reviews.filter((r) => r.userId === currentUserId);
+    const others = reviews.filter((r) => r.userId !== currentUserId);
+    return [...mine, ...others];
+  }, [reviews, currentUserId]);
+
+  return (
+    <Modal title={title} onClose={onClose}>
+      {isLoading && <p className="reviews-status">Loading reviews…</p>}
+      {reviews && reviews.length === 0 && <p className="reviews-status">No written reviews yet.</p>}
+      {sortedReviews && sortedReviews.length > 0 && (
         <div className="movie-reviews">
-          {reviewsLoading && <p className="reviews-status">Loading reviews…</p>}
-          {reviews && reviews.length === 0 && <p className="reviews-status">No written reviews yet.</p>}
-          {reviews?.map((review) => (
+          {sortedReviews.map((review) => (
             <div key={review.userId} className="movie-review">
               <div className="movie-review-header">
                 <span className="movie-review-author">{review.username}</span>
@@ -257,6 +292,6 @@ function RankingRow({ entry, period, myRating }: RankingRowProps) {
           ))}
         </div>
       )}
-    </li>
+    </Modal>
   );
 }

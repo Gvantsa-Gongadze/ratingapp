@@ -35,6 +35,7 @@ export interface RankingEntryDto {
   posterUrl: string | null;
   weightedScore: number;
   ratingsCount: number;
+  reviewsCount: number;
   /** ISO 8601 timestamp of the most recent rating this movie received. */
   ratedAt: string;
 }

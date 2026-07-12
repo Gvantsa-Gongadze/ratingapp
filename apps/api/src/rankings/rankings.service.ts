@@ -19,6 +19,7 @@ interface RawRankingRow {
   posterPath: string | null;
   avgScore: string;
   ratingsCount: string;
+  reviewsCount: string;
   latestRatedAt: string;
 }
 
@@ -48,6 +49,7 @@ export class RankingsService {
       .addSelect('movie.poster_path', 'posterPath')
       .addSelect('AVG(rating.score)', 'avgScore')
       .addSelect('COUNT(rating.id)', 'ratingsCount')
+      .addSelect('COUNT(rating.review_text)', 'reviewsCount')
       .addSelect('MAX(rating.rated_at)', 'latestRatedAt')
       .groupBy('movie.id')
       .addGroupBy('movie.title')
@@ -62,6 +64,7 @@ export class RankingsService {
       ...row,
       avgScore: Number(row.avgScore),
       ratingsCount: Number(row.ratingsCount),
+      reviewsCount: Number(row.reviewsCount),
     }));
 
     if (rows.length === 0) {
@@ -87,6 +90,7 @@ export class RankingsService {
       posterUrl: buildPosterUrl(row.posterPath),
       weightedScore: Math.round(row.weightedScore * 10) / 10,
       ratingsCount: row.ratingsCount,
+      reviewsCount: row.reviewsCount,
       ratedAt: new Date(row.latestRatedAt).toISOString(),
     }));
 
