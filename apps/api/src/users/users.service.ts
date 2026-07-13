@@ -1,6 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import type { UserSettingsDto, UserSettingsResponseDto } from '@ratingapp/shared-types';
 import { Repository } from 'typeorm';
+import { GENRE_NAMES } from '../movies/tmdb/tmdb-genres';
 import { UserSettings } from './entities/user-settings.entity';
 import { User } from './entities/user.entity';
 
@@ -15,6 +17,45 @@ export class UsersService {
 
   findSettings(userId: string): Promise<UserSettings | null> {
     return this.userSettingsRepository.findOneBy({ userId });
+  }
+
+  async getSettingsResponse(userId: string): Promise<UserSettingsResponseDto> {
+    const settings = await this.findSettings(userId);
+    return { settings: this.toSettingsDto(settings), availableGenres: GENRE_NAMES };
+  }
+
+  async updateGenrePreferences(
+    userId: string,
+    genresInclude: string[],
+    genresExclude: string[],
+  ): Promise<UserSettingsResponseDto> {
+    const overlap = genresInclude.filter((g) => genresExclude.includes(g));
+    if (overlap.length > 0) {
+      throw new BadRequestException(`A genre can't be both included and excluded: ${overlap.join(', ')}`);
+    }
+
+    const existing = await this.userSettingsRepository.findOneBy({ userId });
+    const settings = this.userSettingsRepository.create({
+      ...existing,
+      userId,
+      genresInclude: genresInclude.length > 0 ? genresInclude : null,
+      genresExclude: genresExclude.length > 0 ? genresExclude : null,
+    });
+    const saved = await this.userSettingsRepository.save(settings);
+
+    return { settings: this.toSettingsDto(saved), availableGenres: GENRE_NAMES };
+  }
+
+  private toSettingsDto(settings: UserSettings | null): UserSettingsDto {
+    return {
+      minYear: settings?.minYear ?? null,
+      maxYear: settings?.maxYear ?? null,
+      minRuntime: settings?.minRuntime ?? null,
+      maxRuntime: settings?.maxRuntime ?? null,
+      minTmdbVotes: settings?.minTmdbVotes ?? null,
+      genresInclude: settings?.genresInclude ?? null,
+      genresExclude: settings?.genresExclude ?? null,
+    };
   }
 
   findByEmail(email: string): Promise<User | null> {

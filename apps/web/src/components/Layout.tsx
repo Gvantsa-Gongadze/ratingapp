@@ -34,6 +34,9 @@ export function Layout() {
               <NavLink to="/groups" className={navLinkClassName}>
                 Groups
               </NavLink>
+              <NavLink to="/settings" className={navLinkClassName}>
+                Settings
+              </NavLink>
             </>
           )}
           {isAuthenticated ? (

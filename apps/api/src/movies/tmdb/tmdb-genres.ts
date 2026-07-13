@@ -25,6 +25,9 @@ export const TMDB_GENRES: Record<number, string> = {
   37: 'Western',
 };
 
+/** Canonical genre names, alphabetized for display — the exact strings any genre filter must use. */
+export const GENRE_NAMES: string[] = Object.values(TMDB_GENRES).sort((a, b) => a.localeCompare(b));
+
 const NAME_TO_ID = new Map(
   Object.entries(TMDB_GENRES).map(([id, name]) => [name.toLowerCase(), Number(id)]),
 );

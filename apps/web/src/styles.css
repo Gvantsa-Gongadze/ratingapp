@@ -225,8 +225,19 @@ body {
   cursor: pointer;
 }
 
+.btn-primary {
+  padding: 0.65rem 1rem;
+  border-radius: 6px;
+  border: none;
+  background: var(--accent);
+  color: #14140f;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .rate-form button[type='submit']:disabled,
-.btn-secondary:disabled {
+.btn-secondary:disabled,
+.btn-primary:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
@@ -841,5 +852,53 @@ body {
 .group-history-meta {
   font-size: 0.8rem;
   color: var(--text-dim);
+}
+
+.settings-page h1 {
+  margin-bottom: 0.5rem;
+}
+
+.settings-page .placeholder-copy {
+  max-width: 480px;
+  margin-bottom: 1.5rem;
+}
+
+.genre-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1.75rem;
+}
+
+.genre-chip {
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid #2c2c35;
+  background: var(--surface);
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.genre-chip:hover {
+  border-color: #3a3a46;
+}
+
+.genre-chip--include {
+  border-color: var(--ok);
+  background: rgba(76, 195, 138, 0.12);
+  color: var(--ok);
+}
+
+.genre-chip--exclude {
+  border-color: var(--error);
+  background: rgba(229, 72, 77, 0.12);
+  color: var(--error);
+  text-decoration: line-through;
 }
 
