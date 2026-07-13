@@ -5,6 +5,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ApiError } from '../../api/client';
 import { createInvite, fetchGroupAssignment, fetchGroupDetail, leaveGroup, rateGroupAssignment, skipGroupAssignment } from '../../api/groups';
 import { Countdown } from '../../components/Countdown';
+import { Modal } from '../../components/Modal';
 import { PageLoader } from '../../components/PageLoader';
 
 export function GroupDetailPage() {
@@ -12,6 +13,7 @@ export function GroupDetailPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [inviteCode, setInviteCode] = useState<string | null>(null);
+  const [showMembers, setShowMembers] = useState(false);
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['groups', id],
@@ -52,20 +54,26 @@ export function GroupDetailPage() {
 
       <h1>{data.name}</h1>
       <p className="placeholder-copy">
-        {data.memberCount} member{data.memberCount === 1 ? '' : 's'} ·{' '}
-        {data.mode === 'sync' ? 'Synced' : 'Individual'} mode
+        <button type="button" className="group-members-link" onClick={() => setShowMembers(true)}>
+          {data.memberCount} member{data.memberCount === 1 ? '' : 's'}
+        </button>{' '}
+        · {data.mode === 'sync' ? 'Synced' : 'Individual'} mode
       </p>
 
       <GroupMovieSection groupId={data.id} />
 
-      <ul className="group-member-list">
-        {data.members.map((member) => (
-          <li key={member.userId} className="group-member-row">
-            <span className="group-member-name">{member.username}</span>
-            {member.role === 'owner' && <span className="group-member-badge">Owner</span>}
-          </li>
-        ))}
-      </ul>
+      {showMembers && (
+        <Modal title={`${data.name} — members`} onClose={() => setShowMembers(false)}>
+          <ul className="group-member-list">
+            {data.members.map((member) => (
+              <li key={member.userId} className="group-member-row">
+                <span className="group-member-name">{member.username}</span>
+                {member.role === 'owner' && <span className="group-member-badge">Owner</span>}
+              </li>
+            ))}
+          </ul>
+        </Modal>
+      )}
 
       <div className="group-actions">
         {data.role === 'owner' && (
