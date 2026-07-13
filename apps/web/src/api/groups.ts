@@ -1,10 +1,12 @@
 import type {
+  AssignmentDto,
   CreateGroupRequest,
   GroupDetailDto,
   GroupDto,
   GroupInviteDto,
   JoinGroupRequest,
   MessageResponseDto,
+  RateMovieRequest,
 } from '@ratingapp/shared-types';
 import { apiFetch } from './client';
 
@@ -39,5 +41,22 @@ export function createInvite(groupId: string) {
 export function leaveGroup(groupId: string) {
   return apiFetch<MessageResponseDto>(`/groups/${groupId}/leave`, {
     method: 'POST',
+  });
+}
+
+export function fetchGroupAssignment(groupId: string) {
+  return apiFetch<AssignmentDto>(`/groups/${groupId}/assignment`);
+}
+
+export function skipGroupAssignment(groupId: string, assignmentId: string) {
+  return apiFetch<AssignmentDto>(`/groups/${groupId}/assignment/${assignmentId}/skip`, {
+    method: 'POST',
+  });
+}
+
+export function rateGroupAssignment(groupId: string, assignmentId: string, data: RateMovieRequest) {
+  return apiFetch<AssignmentDto>(`/groups/${groupId}/assignment/${assignmentId}/rate`, {
+    method: 'POST',
+    body: JSON.stringify(data),
   });
 }
