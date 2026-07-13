@@ -5,9 +5,11 @@ interface ModalProps {
   title: string;
   onClose: () => void;
   children: ReactNode;
+  /** Keeps the panel at a constant height instead of sizing to content — for popups whose content changes height as the user interacts with it. */
+  fixedHeight?: boolean;
 }
 
-export function Modal({ title, onClose, children }: ModalProps) {
+export function Modal({ title, onClose, children, fixedHeight = false }: ModalProps) {
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === 'Escape') onClose();
@@ -19,7 +21,7 @@ export function Modal({ title, onClose, children }: ModalProps) {
   return createPortal(
     <div className="modal-backdrop" onClick={onClose}>
       <div
-        className="modal-panel"
+        className={fixedHeight ? 'modal-panel modal-panel--fixed-height' : 'modal-panel'}
         role="dialog"
         aria-modal="true"
         aria-label={title}

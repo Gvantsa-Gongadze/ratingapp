@@ -32,3 +32,8 @@ export interface UpdateGenrePreferencesRequest {
   genresInclude: string[];
   genresExclude: string[];
 }
+
+export interface UpdateYearRangeRequest {
+  minYear: number | null;
+  maxYear: number | null;
+}

@@ -6,6 +6,7 @@ import { ApiError } from '../../api/client';
 import { Countdown } from '../../components/Countdown';
 import { Modal } from '../../components/Modal';
 import { GenrePreferencesSection } from '../settings/GenrePreferencesSection';
+import { YearRangeSection } from '../settings/YearRangeSection';
 
 const ASSIGNMENT_QUERY_KEY = ['assignment', 'current'];
 
@@ -106,7 +107,7 @@ export function CurrentMoviePage() {
       <div className="current-movie-header">
         <h1>Your movie today</h1>
         <button type="button" className="btn-secondary" onClick={() => setShowPreferences(true)}>
-          Movie categories
+          Movie preferences
         </button>
       </div>
 
@@ -215,8 +216,15 @@ export function CurrentMoviePage() {
       </form>
 
       {showPreferences && (
-        <Modal title="Movie categories" onClose={() => setShowPreferences(false)}>
-          <GenrePreferencesSection />
+        <Modal title="Movie preferences" onClose={() => setShowPreferences(false)} fixedHeight>
+          <div className="preferences-section">
+            <h3>Categories</h3>
+            <GenrePreferencesSection />
+          </div>
+          <div className="preferences-section">
+            <h3>Time period</h3>
+            <YearRangeSection />
+          </div>
         </Modal>
       )}
     </section>

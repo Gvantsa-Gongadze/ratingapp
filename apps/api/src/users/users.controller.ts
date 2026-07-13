@@ -4,6 +4,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ChangeEmailDto } from './dto/change-email.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { UpdateGenrePreferencesDto } from './dto/update-genre-preferences.dto';
+import { UpdateYearRangeDto } from './dto/update-year-range.dto';
 import { User } from './entities/user.entity';
 import { UsersService } from './users.service';
 
@@ -20,6 +21,11 @@ export class UsersController {
   @Patch('settings/genres')
   updateGenres(@CurrentUser() user: User, @Body() dto: UpdateGenrePreferencesDto) {
     return this.usersService.updateGenrePreferences(user.id, dto.genresInclude, dto.genresExclude);
+  }
+
+  @Patch('settings/year-range')
+  updateYearRange(@CurrentUser() user: User, @Body() dto: UpdateYearRangeDto) {
+    return this.usersService.updateYearRange(user.id, dto.minYear, dto.maxYear);
   }
 
   @Patch('account/password')

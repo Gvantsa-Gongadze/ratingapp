@@ -65,7 +65,7 @@ export function GenrePreferencesSection() {
 
   if (isError) {
     if (error instanceof ApiError && error.status === 401) {
-      return <p className="placeholder-copy">Log in to choose your favorite movie categories.</p>;
+      return <p className="placeholder-copy">Log in to set your movie preferences.</p>;
     }
     return (
       <p className="status-error">{error instanceof ApiError ? error.message : 'Could not load settings.'}</p>

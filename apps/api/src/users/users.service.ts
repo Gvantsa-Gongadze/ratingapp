@@ -49,6 +49,27 @@ export class UsersService {
     return { settings: this.toSettingsDto(saved), availableGenres: GENRE_NAMES };
   }
 
+  async updateYearRange(
+    userId: string,
+    minYear: number | null,
+    maxYear: number | null,
+  ): Promise<UserSettingsResponseDto> {
+    if (minYear !== null && maxYear !== null && minYear > maxYear) {
+      throw new BadRequestException('The starting year must be before the ending year');
+    }
+
+    const existing = await this.userSettingsRepository.findOneBy({ userId });
+    const settings = this.userSettingsRepository.create({
+      ...existing,
+      userId,
+      minYear,
+      maxYear,
+    });
+    const saved = await this.userSettingsRepository.save(settings);
+
+    return { settings: this.toSettingsDto(saved), availableGenres: GENRE_NAMES };
+  }
+
   private toSettingsDto(settings: UserSettings | null): UserSettingsDto {
     return {
       minYear: settings?.minYear ?? null,

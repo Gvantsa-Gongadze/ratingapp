@@ -15,7 +15,10 @@
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
   background: var(--bg);
   color: var(--text);
 }
@@ -197,7 +200,7 @@ body {
   font-family: inherit;
 }
 
-.rate-form input[type='number'] {
+.rate-form input[type="number"] {
   max-width: 6rem;
 }
 
@@ -216,7 +219,7 @@ body {
   gap: 0.75rem;
 }
 
-.rate-form button[type='submit'] {
+.rate-form button[type="submit"] {
   padding: 0.65rem 1rem;
   border-radius: 6px;
   border: none;
@@ -246,7 +249,7 @@ body {
   cursor: pointer;
 }
 
-.rate-form button[type='submit']:disabled,
+.rate-form button[type="submit"]:disabled,
 .btn-secondary:disabled,
 .btn-primary:disabled {
   opacity: 0.6;
@@ -642,6 +645,10 @@ body {
   animation: modal-pop-in 0.18s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+.modal-panel--fixed-height {
+  height: 80vh;
+}
+
 .modal-header {
   display: flex;
   align-items: center;
@@ -936,3 +943,32 @@ body {
   text-decoration: line-through;
 }
 
+.preferences-section {
+  margin-bottom: 1.75rem;
+  padding-bottom: 1.75rem;
+  border-bottom: 1px solid #2c2c35;
+}
+
+.preferences-section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.preferences-section h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1.05rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text);
+}
+
+.year-range-inputs {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.year-range-inputs select {
+  max-width: 8rem;
+}
