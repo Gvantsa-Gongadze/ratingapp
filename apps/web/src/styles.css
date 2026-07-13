@@ -288,16 +288,24 @@ body {
   color: var(--text-dim);
 }
 
-.auth-form input {
+.auth-form h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.auth-form input,
+.auth-form select {
   padding: 0.6rem 0.75rem;
   border-radius: 6px;
   border: 1px solid #2c2c35;
   background: var(--surface);
   color: var(--text);
   font-size: 1rem;
+  font-family: inherit;
 }
 
-.auth-form input:focus {
+.auth-form input:focus,
+.auth-form select:focus {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
 }
@@ -640,5 +648,100 @@ body {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
+}
+
+.groups-page h1,
+.group-detail-page h1 {
+  margin-bottom: 1rem;
+}
+
+.group-list {
+  list-style: none;
+  margin: 0 0 2rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.group-row {
+  background: var(--surface);
+  border: 1px solid #26262f;
+  border-radius: 10px;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+.group-row:hover {
+  border-color: #3a3a46;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  transform: translateY(-1px);
+}
+
+.group-row-link {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.9rem 1.1rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.group-row-name {
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+.group-row-meta {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.group-forms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #2c2c35;
+}
+
+.group-member-list {
+  list-style: none;
+  margin: 1.5rem 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 360px;
+}
+
+.group-member-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.6rem 0.9rem;
+  background: var(--surface);
+  border: 1px solid #26262f;
+  border-radius: 8px;
+}
+
+.group-member-name {
+  font-weight: 500;
+}
+
+.group-member-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--accent);
+}
+
+.group-actions {
+  padding-top: 1rem;
+  border-top: 1px solid #2c2c35;
 }
 

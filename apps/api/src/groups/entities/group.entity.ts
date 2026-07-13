@@ -29,4 +29,7 @@ export class Group {
 
   @Column({ type: 'jsonb', default: () => "'{}'" })
   settings: Record<string, unknown>;
+
+  @Column({ name: 'created_at', type: 'timestamp', default: () => 'now()' })
+  createdAt: Date;
 }
