@@ -12,6 +12,6 @@ export class RatingsController {
 
   @Get('mine')
   getMine(@CurrentUser() user: User, @Query() query: MyRatingsQueryDto) {
-    return this.ratingsService.findByUser(user.id, query.period ?? 'all', query.tz);
+    return this.ratingsService.findByUser(user.id, query.period ?? 'all', query.tz, query.page, query.pageSize);
   }
 }

@@ -19,6 +19,14 @@ export interface MyRatingDto {
   reviewsCount: number;
 }
 
+export interface PaginatedMyRatings {
+  items: MyRatingDto[];
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+}
+
 export type RankingPeriod = 'daily' | 'weekly' | 'monthly' | 'all';
 
 export interface RankingEntryDto {

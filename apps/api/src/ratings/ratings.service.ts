@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import type { MyRatingDto, RankingPeriod } from '@ratingapp/shared-types';
+import type { PaginatedMyRatings, RankingPeriod } from '@ratingapp/shared-types';
 import { MoreThanOrEqual, Repository } from 'typeorm';
 import { cutoffForPeriod } from '../common/period-cutoff.util';
 import { MoviesService } from '../movies/movies.service';
@@ -14,6 +14,9 @@ export interface CreateRatingInput {
   reviewText: string | null;
   ratedAt: Date;
 }
+
+const DEFAULT_PAGE_SIZE = 10;
+const MAX_PAGE_SIZE = 100;
 
 @Injectable()
 export class RatingsService {
@@ -32,18 +35,28 @@ export class RatingsService {
     userId: string,
     period: RankingPeriod = 'all',
     timeZone?: string,
-  ): Promise<MyRatingDto[]> {
+    page = 1,
+    pageSize = DEFAULT_PAGE_SIZE,
+  ): Promise<PaginatedMyRatings> {
+    const safePage = Math.max(1, Math.floor(page));
+    const safePageSize = Math.min(MAX_PAGE_SIZE, Math.max(1, Math.floor(pageSize)));
     const cutoff = cutoffForPeriod(period, timeZone);
 
-    const ratings = await this.ratingsRepository.find({
+    const [ratings, total] = await this.ratingsRepository.findAndCount({
       where: {
         userId,
         ...(cutoff ? { ratedAt: MoreThanOrEqual(cutoff) } : {}),
       },
       relations: ['movie'],
-      order: { ratedAt: 'DESC' },
+      order: { score: 'DESC', ratedAt: 'DESC' },
+      skip: (safePage - 1) * safePageSize,
+      take: safePageSize,
     });
-    if (ratings.length === 0) return [];
+    const totalPages = Math.ceil(total / safePageSize);
+
+    if (ratings.length === 0) {
+      return { items: [], page: safePage, pageSize: safePageSize, total, totalPages };
+    }
 
     const movieIds = [...new Set(ratings.map((r) => r.movieId))];
     const statsQb = this.ratingsRepository
@@ -61,7 +74,7 @@ export class RatingsService {
       statsRows.map((r) => [r.movieId, { ratingsCount: Number(r.ratingsCount), reviewsCount: Number(r.reviewsCount) }]),
     );
 
-    return ratings.map((rating) => ({
+    const items = ratings.map((rating) => ({
       id: rating.id,
       movie: this.moviesService.toDto(rating.movie),
       score: rating.score,
@@ -70,6 +83,8 @@ export class RatingsService {
       ratingsCount: statsByMovieId.get(rating.movieId)?.ratingsCount ?? 1,
       reviewsCount: statsByMovieId.get(rating.movieId)?.reviewsCount ?? 0,
     }));
+
+    return { items, page: safePage, pageSize: safePageSize, total, totalPages };
   }
 
   async getMovieStats(movieId: string): Promise<{ averageScore: number; ratingsCount: number } | null> {

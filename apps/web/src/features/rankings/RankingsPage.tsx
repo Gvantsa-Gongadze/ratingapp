@@ -116,23 +116,26 @@ function PeriodTabs({ period, onChange }: PeriodTabsProps) {
 
 function MyRankingsSection() {
   const [period, setPeriod] = useState<RankingPeriod>('daily');
+  const [page, setPage] = useState(1);
   const [openReviews, setOpenReviews] = useState<{ movieId: string; title: string } | null>(null);
   const currentUserId = getCurrentUserId();
 
+  function handlePeriodChange(next: RankingPeriod) {
+    if (next === period) return;
+    setPeriod(next);
+    setPage(1);
+  }
+
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['ratings', 'mine', period],
-    queryFn: () => fetchMyRatings(period),
+    queryKey: ['ratings', 'mine', period, page],
+    queryFn: () => fetchMyRatings(period, page),
+    placeholderData: keepPreviousData,
     retry: false,
   });
 
-  const ranked = useMemo(() => {
-    if (!data) return [];
-    return [...data].sort((a, b) => b.score - a.score);
-  }, [data]);
-
   return (
     <>
-      <PeriodTabs period={period} onChange={setPeriod} />
+      <PeriodTabs period={period} onChange={handlePeriodChange} />
 
       {isLoading && <PageLoader />}
 
@@ -147,21 +150,47 @@ function MyRankingsSection() {
           </p>
         ))}
 
-      {data && ranked.length === 0 && (
+      {data && data.items.length === 0 && (
         <p className="placeholder-copy">You haven't rated anything yet for this period.</p>
       )}
 
-      {data && ranked.length > 0 && (
-        <ol className="ranking-list">
-          {ranked.map((rating, index) => (
-            <MyRankingRow
-              key={rating.id}
-              rating={rating}
-              rank={index + 1}
-              onShowReviews={() => setOpenReviews({ movieId: rating.movie.id, title: rating.movie.title })}
-            />
-          ))}
-        </ol>
+      {data && data.items.length > 0 && (
+        <>
+          <ol className="ranking-list">
+            {data.items.map((rating, index) => (
+              <MyRankingRow
+                key={rating.id}
+                rating={rating}
+                rank={(data.page - 1) * data.pageSize + index + 1}
+                onShowReviews={() => setOpenReviews({ movieId: rating.movie.id, title: rating.movie.title })}
+              />
+            ))}
+          </ol>
+
+          {data.totalPages > 1 && (
+            <div className="pagination">
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setPage((p) => p - 1)}
+                disabled={data.page <= 1}
+              >
+                Previous
+              </button>
+              <span className="pagination-status">
+                Page {data.page} of {data.totalPages}
+              </span>
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={() => setPage((p) => p + 1)}
+                disabled={data.page >= data.totalPages}
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       {openReviews && (

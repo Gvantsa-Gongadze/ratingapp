@@ -1,5 +1,6 @@
 import type { RankingPeriod } from '@ratingapp/shared-types';
-import { IsIn, IsOptional, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 const PERIODS: RankingPeriod[] = ['daily', 'weekly', 'monthly', 'all'];
 
@@ -12,4 +13,17 @@ export class MyRatingsQueryDto {
   @IsOptional()
   @IsString()
   tz?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  page?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  pageSize?: number;
 }
