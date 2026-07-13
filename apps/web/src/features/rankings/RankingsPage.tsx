@@ -1,7 +1,8 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import type { RankingEntryDto, RankingPeriod } from '@ratingapp/shared-types';
+import type { MyRatingDto, RankingEntryDto, RankingPeriod } from '@ratingapp/shared-types';
 import type { CSSProperties } from 'react';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { fetchMovieReviews, fetchRankings } from '../../api/rankings';
 import { fetchMyRatings } from '../../api/ratings';
 import { ApiError } from '../../api/client';
@@ -31,9 +32,43 @@ function formatRelativeTime(iso: string): string {
 }
 
 export function RankingsPage() {
-  const [period, setPeriod] = useState<RankingPeriod>('daily');
-  const [page, setPage] = useState(1);
+  const currentUserId = getCurrentUserId();
+  const [openReviews, setOpenReviews] = useState<{ movieId: string; title: string } | null>(null);
+  const [view, setView] = useState<'mine' | 'everyone'>('mine');
 
+  return (
+    <section className="rankings-page">
+      <h1>Rankings</h1>
+
+      <div className="tabs">
+        <button type="button" className={view === 'mine' ? 'active' : ''} onClick={() => setView('mine')}>
+          Me
+        </button>
+        <button type="button" className={view === 'everyone' ? 'active' : ''} onClick={() => setView('everyone')}>
+          Everyone
+        </button>
+      </div>
+
+      {view === 'mine' && <MyRankingsSection />}
+
+      {view === 'everyone' && (
+        <EveryoneRankingsSection
+          currentUserId={currentUserId}
+          openReviews={openReviews}
+          onShowReviews={setOpenReviews}
+        />
+      )}
+    </section>
+  );
+}
+
+interface PeriodTabsProps {
+  period: RankingPeriod;
+  onChange: (next: RankingPeriod) => void;
+}
+
+/** Self-contained sliding period tab bar — each instance tracks its own indicator position. */
+function PeriodTabs({ period, onChange }: PeriodTabsProps) {
   const tabRefs = useRef<Record<RankingPeriod, HTMLButtonElement | null>>({
     daily: null,
     weekly: null,
@@ -41,15 +76,172 @@ export function RankingsPage() {
     all: null,
   });
   const [indicator, setIndicator] = useState({ left: 0, width: 0 });
-  const periodIndexRef = useRef(PERIODS.findIndex((p) => p.value === period));
-  const [slideDirection, setSlideDirection] = useState(1);
-  const [transitionKey, setTransitionKey] = useState(0);
-  const listRef = useRef<HTMLOListElement>(null);
 
   useLayoutEffect(() => {
     const el = tabRefs.current[period];
     if (el) setIndicator({ left: el.offsetLeft, width: el.offsetWidth });
   }, [period]);
+
+  useEffect(() => {
+    function handleResize() {
+      const el = tabRefs.current[period];
+      if (el) setIndicator({ left: el.offsetLeft, width: el.offsetWidth });
+    }
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [period]);
+
+  return (
+    <div className="tabs tabs--sliding">
+      <span
+        className="tab-indicator"
+        style={{ transform: `translateX(${indicator.left}px)`, width: indicator.width }}
+      />
+      {PERIODS.map((p) => (
+        <button
+          key={p.value}
+          ref={(el) => {
+            tabRefs.current[p.value] = el;
+          }}
+          type="button"
+          className={period === p.value ? 'active' : ''}
+          onClick={() => onChange(p.value)}
+        >
+          {p.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function MyRankingsSection() {
+  const [period, setPeriod] = useState<RankingPeriod>('daily');
+  const [openReviews, setOpenReviews] = useState<{ movieId: string; title: string } | null>(null);
+  const currentUserId = getCurrentUserId();
+
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ['ratings', 'mine', period],
+    queryFn: () => fetchMyRatings(period),
+    retry: false,
+  });
+
+  const ranked = useMemo(() => {
+    if (!data) return [];
+    return [...data].sort((a, b) => b.score - a.score);
+  }, [data]);
+
+  return (
+    <>
+      <PeriodTabs period={period} onChange={setPeriod} />
+
+      {isLoading && <PageLoader />}
+
+      {isError &&
+        (error instanceof ApiError && error.status === 401 ? (
+          <p className="placeholder-copy">
+            <Link to="/auth">Log in</Link> to see your own rankings.
+          </p>
+        ) : (
+          <p className="status-error">
+            {error instanceof ApiError ? error.message : 'Could not load your ratings.'}
+          </p>
+        ))}
+
+      {data && ranked.length === 0 && (
+        <p className="placeholder-copy">You haven't rated anything yet for this period.</p>
+      )}
+
+      {data && ranked.length > 0 && (
+        <ol className="ranking-list">
+          {ranked.map((rating, index) => (
+            <MyRankingRow
+              key={rating.id}
+              rating={rating}
+              rank={index + 1}
+              onShowReviews={() => setOpenReviews({ movieId: rating.movie.id, title: rating.movie.title })}
+            />
+          ))}
+        </ol>
+      )}
+
+      {openReviews && (
+        <MovieReviewsModal
+          movieId={openReviews.movieId}
+          title={openReviews.title}
+          period={period}
+          currentUserId={currentUserId}
+          onClose={() => setOpenReviews(null)}
+        />
+      )}
+    </>
+  );
+}
+
+function MyRankingRow({
+  rating,
+  rank,
+  onShowReviews,
+}: {
+  rating: MyRatingDto;
+  rank: number;
+  onShowReviews: () => void;
+}) {
+  return (
+    <li className="ranking-item">
+      <div className="ranking-row">
+        <span className="ranking-rank">{rank}</span>
+        {rating.movie.posterUrl && (
+          <img
+            className="ranking-poster"
+            src={rating.movie.posterUrl}
+            alt={`${rating.movie.title} poster`}
+            loading="lazy"
+            decoding="async"
+          />
+        )}
+        <div className="ranking-info">
+          <span className="ranking-title">
+            {rating.movie.title} <span className="movie-year">({rating.movie.year})</span>
+          </span>
+          <div className="ranking-meta-row">
+            <span className="ranking-meta">
+              {rating.ratingsCount} rating{rating.ratingsCount === 1 ? '' : 's'}
+            </span>
+            {rating.reviewsCount > 0 && (
+              <button type="button" className="reviews-toggle" onClick={onShowReviews}>
+                Show reviews ({rating.reviewsCount})
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="ranking-scores">
+          <div className="score-block">
+            <span className="score-value">{rating.score.toFixed(1)}</span>
+            <span className="score-label">You</span>
+          </div>
+        </div>
+        <span className="ranking-timestamp" title={new Date(rating.ratedAt).toLocaleString()}>
+          {formatRelativeTime(rating.ratedAt)}
+        </span>
+      </div>
+    </li>
+  );
+}
+
+interface EveryoneRankingsSectionProps {
+  currentUserId: string | null;
+  openReviews: { movieId: string; title: string } | null;
+  onShowReviews: (value: { movieId: string; title: string } | null) => void;
+}
+
+function EveryoneRankingsSection({ currentUserId, openReviews, onShowReviews }: EveryoneRankingsSectionProps) {
+  const [period, setPeriod] = useState<RankingPeriod>('daily');
+  const [page, setPage] = useState(1);
+
+  const periodIndexRef = useRef(PERIODS.findIndex((p) => p.value === period));
+  const [slideDirection, setSlideDirection] = useState(1);
+  const [transitionKey, setTransitionKey] = useState(0);
+  const listRef = useRef<HTMLOListElement>(null);
 
   // Restart the slide-in animation on the existing DOM nodes (rather than
   // remounting via `key`) so posters don't flash/re-decode on every switch.
@@ -60,15 +252,6 @@ export function RankingsPage() {
     void el.offsetWidth;
     el.classList.add('ranking-list--sliding');
   }, [transitionKey]);
-
-  useEffect(() => {
-    function handleResize() {
-      const el = tabRefs.current[period];
-      if (el) setIndicator({ left: el.offsetLeft, width: el.offsetWidth });
-    }
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [period]);
 
   function handlePeriodChange(next: RankingPeriod) {
     if (next === period) return;
@@ -86,53 +269,14 @@ export function RankingsPage() {
     placeholderData: keepPreviousData,
   });
 
-  // Best-effort: unauthenticated visitors just won't see a "You" score.
-  const { data: myRatings } = useQuery({
-    queryKey: ['ratings', 'mine'],
-    queryFn: fetchMyRatings,
-    retry: false,
-  });
-
-  const myRatingByMovieId = useMemo(() => {
-    const map = new Map<string, { score: number }>();
-    myRatings?.forEach((rating) => map.set(rating.movie.id, { score: rating.score }));
-    return map;
-  }, [myRatings]);
-
-  const currentUserId = getCurrentUserId();
-
-  const [openReviews, setOpenReviews] = useState<{ movieId: string; title: string } | null>(null);
-
   return (
-    <section className="rankings-page">
-      <h1>Rankings</h1>
-
-      <div className="tabs tabs--sliding">
-        <span
-          className="tab-indicator"
-          style={{ transform: `translateX(${indicator.left}px)`, width: indicator.width }}
-        />
-        {PERIODS.map((p) => (
-          <button
-            key={p.value}
-            ref={(el) => {
-              tabRefs.current[p.value] = el;
-            }}
-            type="button"
-            className={period === p.value ? 'active' : ''}
-            onClick={() => handlePeriodChange(p.value)}
-          >
-            {p.label}
-          </button>
-        ))}
-      </div>
+    <>
+      <PeriodTabs period={period} onChange={handlePeriodChange} />
 
       {isLoading && <PageLoader />}
 
       {isError && (
-        <p className="status-error">
-          {error instanceof ApiError ? error.message : 'Could not load rankings.'}
-        </p>
+        <p className="status-error">{error instanceof ApiError ? error.message : 'Could not load rankings.'}</p>
       )}
 
       {data && data.items.length === 0 && (
@@ -154,8 +298,7 @@ export function RankingsPage() {
               <RankingRow
                 key={entry.movieId}
                 entry={entry}
-                myRating={myRatingByMovieId.get(entry.movieId)}
-                onShowReviews={() => setOpenReviews({ movieId: entry.movieId, title: entry.title })}
+                onShowReviews={() => onShowReviews({ movieId: entry.movieId, title: entry.title })}
               />
             ))}
           </ol>
@@ -192,20 +335,19 @@ export function RankingsPage() {
           title={openReviews.title}
           period={period}
           currentUserId={currentUserId}
-          onClose={() => setOpenReviews(null)}
+          onClose={() => onShowReviews(null)}
         />
       )}
-    </section>
+    </>
   );
 }
 
 interface RankingRowProps {
   entry: RankingEntryDto;
-  myRating: { score: number } | undefined;
   onShowReviews: () => void;
 }
 
-function RankingRow({ entry, myRating, onShowReviews }: RankingRowProps) {
+function RankingRow({ entry, onShowReviews }: RankingRowProps) {
   return (
     <li className="ranking-item">
       <div className="ranking-row">
@@ -238,10 +380,6 @@ function RankingRow({ entry, myRating, onShowReviews }: RankingRowProps) {
           <div className="score-block">
             <span className="score-value">{entry.weightedScore.toFixed(1)}</span>
             <span className="score-label">Everyone</span>
-          </div>
-          <div className="score-block">
-            <span className="score-value">{myRating !== undefined ? myRating.score.toFixed(1) : '—'}</span>
-            <span className="score-label">You</span>
           </div>
         </div>
         <span className="ranking-timestamp" title={new Date(entry.ratedAt).toLocaleString()}>

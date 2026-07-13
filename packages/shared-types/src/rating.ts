@@ -14,6 +14,9 @@ export interface MyRatingDto {
   score: number;
   review: string | null;
   ratedAt: string;
+  /** Community aggregate for this movie, scoped to the same period as the query. */
+  ratingsCount: number;
+  reviewsCount: number;
 }
 
 export type RankingPeriod = 'daily' | 'weekly' | 'monthly' | 'all';

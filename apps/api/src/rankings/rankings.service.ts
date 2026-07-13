@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { MovieReviewDto, PaginatedRankings, RankingPeriod } from '@ratingapp/shared-types';
 import { IsNull, MoreThanOrEqual, Not, Repository } from 'typeorm';
+import { cutoffForPeriod } from '../common/period-cutoff.util';
 import { buildPosterUrl } from '../movies/movies.service';
 import { Rating } from '../ratings/entities/rating.entity';
 
@@ -38,7 +39,7 @@ export class RankingsService {
   ): Promise<PaginatedRankings> {
     const safePage = Math.max(1, Math.floor(page));
     const safePageSize = Math.min(MAX_PAGE_SIZE, Math.max(1, Math.floor(pageSize)));
-    const cutoff = this.cutoffFor(period, this.resolveTimeZone(timeZone));
+    const cutoff = cutoffForPeriod(period, timeZone);
 
     const qb = this.ratingsRepository
       .createQueryBuilder('rating')
@@ -103,7 +104,7 @@ export class RankingsService {
     period: RankingPeriod = 'all',
     timeZone?: string,
   ): Promise<MovieReviewDto[]> {
-    const cutoff = this.cutoffFor(period, this.resolveTimeZone(timeZone));
+    const cutoff = cutoffForPeriod(period, timeZone);
 
     const ratings = await this.ratingsRepository.find({
       where: {
@@ -129,94 +130,5 @@ export class RankingsService {
     const v = ratingsCount;
     const m = MIN_VOTES_FOR_CONFIDENCE;
     return (v / (v + m)) * avgScore + (m / (v + m)) * globalMean;
-  }
-
-  /**
-   * Calendar boundaries (not rolling windows) so "Today" flips over at
-   * the user's actual midnight rather than 24 hours after their last
-   * rating.
-   */
-  private cutoffFor(period: RankingPeriod, timeZone: string): Date | null {
-    const now = new Date();
-    switch (period) {
-      case 'daily':
-        return this.startOfDayInZone(now, timeZone);
-      case 'weekly':
-        return this.startOfWeekInZone(now, timeZone);
-      case 'monthly':
-        return this.startOfMonthInZone(now, timeZone);
-      case 'all':
-        return null;
-    }
-  }
-
-  /** Falls back to UTC if the client didn't send one or sent garbage. */
-  private resolveTimeZone(timeZone?: string): string {
-    if (!timeZone) return 'UTC';
-    try {
-      new Intl.DateTimeFormat('en-US', { timeZone });
-      return timeZone;
-    } catch {
-      return 'UTC';
-    }
-  }
-
-  /**
-   * Offset (ms) such that `date.getTime() + offset`, read with the UTC
-   * getters, yields the wall-clock date/time as observed in `timeZone`.
-   * This is the standard trick for timezone math without a date library.
-   */
-  private getTimeZoneOffsetMs(date: Date, timeZone: string): number {
-    const parts = new Intl.DateTimeFormat('en-US', {
-      timeZone,
-      hourCycle: 'h23',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    })
-      .formatToParts(date)
-      .reduce<Record<string, string>>((acc, part) => {
-        if (part.type !== 'literal') acc[part.type] = part.value;
-        return acc;
-      }, {});
-
-    const asUtc = Date.UTC(
-      Number(parts.year),
-      Number(parts.month) - 1,
-      Number(parts.day),
-      Number(parts.hour),
-      Number(parts.minute),
-      Number(parts.second),
-    );
-    return asUtc - date.getTime();
-  }
-
-  private startOfDayInZone(date: Date, timeZone: string): Date {
-    const offsetMs = this.getTimeZoneOffsetMs(date, timeZone);
-    const zoned = new Date(date.getTime() + offsetMs);
-    zoned.setUTCHours(0, 0, 0, 0);
-    return new Date(zoned.getTime() - offsetMs);
-  }
-
-  /** Monday-start week, per ISO 8601. */
-  private startOfWeekInZone(date: Date, timeZone: string): Date {
-    const offsetMs = this.getTimeZoneOffsetMs(date, timeZone);
-    const zoned = new Date(date.getTime() + offsetMs);
-    const day = zoned.getUTCDay();
-    const daysSinceMonday = day === 0 ? 6 : day - 1;
-    zoned.setUTCDate(zoned.getUTCDate() - daysSinceMonday);
-    zoned.setUTCHours(0, 0, 0, 0);
-    return new Date(zoned.getTime() - offsetMs);
-  }
-
-  private startOfMonthInZone(date: Date, timeZone: string): Date {
-    const offsetMs = this.getTimeZoneOffsetMs(date, timeZone);
-    const zoned = new Date(date.getTime() + offsetMs);
-    zoned.setUTCDate(1);
-    zoned.setUTCHours(0, 0, 0, 0);
-    return new Date(zoned.getTime() - offsetMs);
   }
 }
