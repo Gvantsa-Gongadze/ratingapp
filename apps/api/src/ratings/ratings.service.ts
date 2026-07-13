@@ -48,7 +48,7 @@ export class RatingsService {
         ...(cutoff ? { ratedAt: MoreThanOrEqual(cutoff) } : {}),
       },
       relations: ['movie'],
-      order: { score: 'DESC', ratedAt: 'DESC' },
+      order: { ratedAt: 'DESC' },
       skip: (safePage - 1) * safePageSize,
       take: safePageSize,
     });
