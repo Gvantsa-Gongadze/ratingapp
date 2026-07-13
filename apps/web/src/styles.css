@@ -863,6 +863,29 @@ body {
   margin-bottom: 1.5rem;
 }
 
+.settings-section {
+  margin-bottom: 2.5rem;
+  padding-bottom: 2.5rem;
+  border-bottom: 1px solid #2c2c35;
+}
+
+.settings-section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.settings-section > h2 {
+  font-size: 1.3rem;
+  margin: 0 0 1rem;
+}
+
+.account-forms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2.5rem;
+}
+
 .genre-chip-list {
   display: flex;
   flex-wrap: wrap;

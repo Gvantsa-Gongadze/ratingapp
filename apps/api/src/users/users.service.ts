@@ -1,10 +1,13 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import type { UserSettingsDto, UserSettingsResponseDto } from '@ratingapp/shared-types';
+import type { MessageResponseDto, UserSettingsDto, UserSettingsResponseDto } from '@ratingapp/shared-types';
+import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
 import { GENRE_NAMES } from '../movies/tmdb/tmdb-genres';
 import { UserSettings } from './entities/user-settings.entity';
 import { User } from './entities/user.entity';
+
+const SALT_ROUNDS = 10;
 
 @Injectable()
 export class UsersService {
@@ -93,5 +96,38 @@ export class UsersService {
       resetPasswordTokenHash: null,
       resetPasswordExpiresAt: null,
     });
+  }
+
+  async changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<MessageResponseDto> {
+    const user = await this.requireVerifiedUser(userId, currentPassword);
+    const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+    await this.usersRepository.update(user.id, { passwordHash });
+    return { message: 'Your password has been updated.' };
+  }
+
+  async changeEmail(userId: string, currentPassword: string, newEmail: string): Promise<MessageResponseDto> {
+    const user = await this.requireVerifiedUser(userId, currentPassword);
+
+    if (newEmail.toLowerCase() !== user.email.toLowerCase()) {
+      const existing = await this.findByEmail(newEmail);
+      if (existing) {
+        throw new ConflictException('Email already in use');
+      }
+    }
+
+    await this.usersRepository.update(user.id, { email: newEmail });
+    return { message: 'Your email has been updated.' };
+  }
+
+  private async requireVerifiedUser(userId: string, currentPassword: string): Promise<User> {
+    const user = await this.usersRepository.findOneBy({ id: userId });
+    if (!user || !(await bcrypt.compare(currentPassword, user.passwordHash))) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+    return user;
   }
 }

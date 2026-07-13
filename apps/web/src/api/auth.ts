@@ -2,11 +2,16 @@ import type {
   AuthResponseDto,
   ForgotPasswordRequest,
   LoginRequest,
+  MeDto,
   MessageResponseDto,
   RegisterRequest,
   ResetPasswordRequest,
 } from '@ratingapp/shared-types';
 import { apiFetch } from './client';
+
+export function fetchMe() {
+  return apiFetch<MeDto>('/auth/me');
+}
 
 export function register(data: RegisterRequest) {
   return apiFetch<AuthResponseDto>('/auth/register', {
