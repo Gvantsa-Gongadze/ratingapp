@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom';
 import { fetchCurrentAssignment, rateAssignment, skipAssignment } from '../../api/assignments';
 import { ApiError } from '../../api/client';
 import { Countdown } from '../../components/Countdown';
+import { Modal } from '../../components/Modal';
+import { GenrePreferencesSection } from '../settings/GenrePreferencesSection';
 
 const ASSIGNMENT_QUERY_KEY = ['assignment', 'current'];
 
@@ -17,6 +19,7 @@ export function CurrentMoviePage() {
 
   const [score, setScore] = useState<number | ''>(7);
   const [review, setReview] = useState('');
+  const [showPreferences, setShowPreferences] = useState(false);
 
   const isScoreValid =
     typeof score === 'number' && score >= 1 && score <= 10 && Number(score.toFixed(1)) === score;
@@ -100,7 +103,12 @@ export function CurrentMoviePage() {
 
   return (
     <section className="current-movie">
-      <h1>Your movie today</h1>
+      <div className="current-movie-header">
+        <h1>Your movie today</h1>
+        <button type="button" className="btn-secondary" onClick={() => setShowPreferences(true)}>
+          Movie categories
+        </button>
+      </div>
 
       <div className="movie-card">
         {data.movie.posterUrl && (
@@ -205,6 +213,12 @@ export function CurrentMoviePage() {
           </button>
         </div>
       </form>
+
+      {showPreferences && (
+        <Modal title="Movie categories" onClose={() => setShowPreferences(false)}>
+          <GenrePreferencesSection />
+        </Modal>
+      )}
     </section>
   );
 }
