@@ -288,10 +288,15 @@ export class GroupAssignmentsService {
       order: { number: 'DESC' },
     });
 
-    const [settings, excludeTmdbIds] = await Promise.all([
+    const [settings, groupExcluded, membersExcluded] = await Promise.all([
       this.usersService.findSettings(requestingUserId),
       this.getGroupExcludedTmdbIds(groupId),
+      this.getGroupMembersExcludedTmdbIds(groupId),
     ]);
+    // A shared cycle movie must be new to every current member, not just new
+    // to this group — otherwise someone who already saw it solo (or in
+    // another group) would get it again.
+    const excludeTmdbIds = new Set([...groupExcluded, ...membersExcluded]);
 
     const movie = await this.randomizer.pickForUser(
       {
@@ -350,6 +355,21 @@ export class GroupAssignmentsService {
       .createQueryBuilder('cycle')
       .innerJoin('cycle.movie', 'movie')
       .where('cycle.group_id = :groupId', { groupId })
+      .select('movie.tmdb_id', 'tmdbId')
+      .getRawMany<{ tmdbId: number }>();
+    return new Set(rows.map((r) => r.tmdbId));
+  }
+
+  /** Every movie any current member has ever been assigned, anywhere (solo or any group). */
+  private async getGroupMembersExcludedTmdbIds(groupId: string): Promise<Set<number>> {
+    const members = await this.groupMembersRepository.find({ where: { groupId } });
+    const memberIds = members.map((m) => m.userId);
+    if (memberIds.length === 0) return new Set();
+
+    const rows = await this.assignmentsRepository
+      .createQueryBuilder('assignment')
+      .innerJoin('assignment.movie', 'movie')
+      .where('assignment.user_id IN (:...memberIds)', { memberIds })
       .select('movie.tmdb_id', 'tmdbId')
       .getRawMany<{ tmdbId: number }>();
     return new Set(rows.map((r) => r.tmdbId));
