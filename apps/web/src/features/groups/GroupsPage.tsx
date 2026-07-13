@@ -16,6 +16,13 @@ export function GroupsPage() {
     <section className="groups-page">
       <h1>Groups</h1>
 
+      <div className="group-forms">
+        <CreateGroupForm />
+        <JoinGroupForm />
+      </div>
+
+      <h2>Your groups</h2>
+
       {isLoading && <PageLoader />}
 
       {isError && (
@@ -42,11 +49,6 @@ export function GroupsPage() {
           ))}
         </ul>
       )}
-
-      <div className="group-forms">
-        <CreateGroupForm />
-        <JoinGroupForm />
-      </div>
     </section>
   );
 }
