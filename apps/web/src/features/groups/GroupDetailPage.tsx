@@ -214,105 +214,107 @@ function GroupMovieSection({ groupId }: { groupId: string }) {
   if (!data) return null;
 
   return (
-    <div className="movie-card">
-      {data.movie.posterUrl && (
-        <img className="movie-poster" src={data.movie.posterUrl} alt={`${data.movie.title} poster`} />
-      )}
-      <div className="movie-details">
-        <h2>
-          {data.movie.title} <span className="movie-year">({data.movie.year})</span>
-        </h2>
-        {data.movie.genres.length > 0 && <p className="movie-genres">{data.movie.genres.join(', ')}</p>}
-        {data.movie.runtime && <p className="movie-runtime">{data.movie.runtime} min</p>}
-        {data.movie.overview && <p className="movie-overview">{data.movie.overview}</p>}
-
-        {data.status === 'active' ? (
-          <Countdown deadlineAt={data.deadlineAt} onExpire={() => refetch()} />
-        ) : (
-          <p className="countdown">{STATUS_COPY[data.status]}</p>
+    <>
+      <div className="movie-card">
+        {data.movie.posterUrl && (
+          <img className="movie-poster" src={data.movie.posterUrl} alt={`${data.movie.title} poster`} />
         )}
+        <div className="movie-details">
+          <h2>
+            {data.movie.title} <span className="movie-year">({data.movie.year})</span>
+          </h2>
+          {data.movie.genres.length > 0 && <p className="movie-genres">{data.movie.genres.join(', ')}</p>}
+          {data.movie.runtime && <p className="movie-runtime">{data.movie.runtime} min</p>}
+          {data.movie.overview && <p className="movie-overview">{data.movie.overview}</p>}
 
-        <div className="movie-links">
-          <a href={data.movie.links.tmdb} target="_blank" rel="noreferrer">
-            TMDB
-          </a>
-          {data.movie.links.imdb && (
-            <a href={data.movie.links.imdb} target="_blank" rel="noreferrer">
-              IMDb
-            </a>
+          {data.status === 'active' ? (
+            <Countdown deadlineAt={data.deadlineAt} onExpire={() => refetch()} />
+          ) : (
+            <p className="countdown">{STATUS_COPY[data.status]}</p>
           )}
-          <a href={data.movie.links.letterboxd} target="_blank" rel="noreferrer">
-            Letterboxd
-          </a>
+
+          <div className="movie-links">
+            <a href={data.movie.links.tmdb} target="_blank" rel="noreferrer">
+              TMDB
+            </a>
+            {data.movie.links.imdb && (
+              <a href={data.movie.links.imdb} target="_blank" rel="noreferrer">
+                IMDb
+              </a>
+            )}
+            <a href={data.movie.links.letterboxd} target="_blank" rel="noreferrer">
+              Letterboxd
+            </a>
+          </div>
+
+          {data.movie.tmdbRating && (
+            <p className="movie-tmdb-rating">
+              TMDB rating: {data.movie.tmdbRating.average.toFixed(1)}/10 (
+              {data.movie.tmdbRating.voteCount.toLocaleString()} votes)
+            </p>
+          )}
+
+          {data.communityRating && (
+            <p className="movie-community-rating">
+              Community: {data.communityRating.averageScore.toFixed(1)}/10 (
+              {data.communityRating.ratingsCount} rating
+              {data.communityRating.ratingsCount === 1 ? '' : 's'})
+            </p>
+          )}
         </div>
-
-        {data.movie.tmdbRating && (
-          <p className="movie-tmdb-rating">
-            TMDB rating: {data.movie.tmdbRating.average.toFixed(1)}/10 (
-            {data.movie.tmdbRating.voteCount.toLocaleString()} votes)
-          </p>
-        )}
-
-        {data.communityRating && (
-          <p className="movie-community-rating">
-            Community: {data.communityRating.averageScore.toFixed(1)}/10 (
-            {data.communityRating.ratingsCount} rating
-            {data.communityRating.ratingsCount === 1 ? '' : 's'})
-          </p>
-        )}
-
-        {data.status === 'active' && (
-          <form className="rate-form" onSubmit={handleRate}>
-            <label>
-              Your rating (1-10)
-              <input
-                type="number"
-                min={1}
-                max={10}
-                step={0.1}
-                required
-                value={score}
-                onChange={handleScoreChange}
-                onBlur={handleScoreBlur}
-              />
-            </label>
-            {score !== '' && !isScoreValid && (
-              <p className="auth-error">Rating must be between 1 and 10, with at most one decimal place</p>
-            )}
-
-            <label>
-              Review (optional)
-              <textarea rows={3} value={review} onChange={(event) => setReview(event.target.value)} />
-            </label>
-
-            {rateMutation.isError && (
-              <p className="auth-error">
-                {rateMutation.error instanceof ApiError ? rateMutation.error.message : 'Could not submit rating'}
-              </p>
-            )}
-            {skipMutation.isError && (
-              <p className="auth-error">
-                {skipMutation.error instanceof ApiError ? skipMutation.error.message : 'Could not skip'}
-              </p>
-            )}
-
-            <div className="movie-actions">
-              <button type="submit" disabled={!isScoreValid || rateMutation.isPending || skipMutation.isPending}>
-                {rateMutation.isPending ? 'Saving…' : 'Rate'}
-              </button>
-              <button
-                type="button"
-                className="btn-secondary"
-                onClick={handleSkip}
-                disabled={rateMutation.isPending || skipMutation.isPending}
-              >
-                {skipMutation.isPending ? 'Skipping…' : "Didn't watch"}
-              </button>
-            </div>
-          </form>
-        )}
       </div>
-    </div>
+
+      {data.status === 'active' && (
+        <form className="rate-form" onSubmit={handleRate}>
+          <label>
+            Your rating (1-10)
+            <input
+              type="number"
+              min={1}
+              max={10}
+              step={0.1}
+              required
+              value={score}
+              onChange={handleScoreChange}
+              onBlur={handleScoreBlur}
+            />
+          </label>
+          {score !== '' && !isScoreValid && (
+            <p className="auth-error">Rating must be between 1 and 10, with at most one decimal place</p>
+          )}
+
+          <label>
+            Review (optional)
+            <textarea rows={3} value={review} onChange={(event) => setReview(event.target.value)} />
+          </label>
+
+          {rateMutation.isError && (
+            <p className="auth-error">
+              {rateMutation.error instanceof ApiError ? rateMutation.error.message : 'Could not submit rating'}
+            </p>
+          )}
+          {skipMutation.isError && (
+            <p className="auth-error">
+              {skipMutation.error instanceof ApiError ? skipMutation.error.message : 'Could not skip'}
+            </p>
+          )}
+
+          <div className="movie-actions">
+            <button type="submit" disabled={!isScoreValid || rateMutation.isPending || skipMutation.isPending}>
+              {rateMutation.isPending ? 'Saving…' : 'Rate'}
+            </button>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={handleSkip}
+              disabled={rateMutation.isPending || skipMutation.isPending}
+            >
+              {skipMutation.isPending ? 'Skipping…' : "Didn't watch"}
+            </button>
+          </div>
+        </form>
+      )}
+    </>
   );
 }
 
