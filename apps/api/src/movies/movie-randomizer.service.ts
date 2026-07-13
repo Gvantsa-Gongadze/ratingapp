@@ -14,8 +14,9 @@ export interface RandomizerFilters {
   genresExclude?: string[] | null;
 }
 
-const MAX_PAGE = 20;
-const MAX_ATTEMPTS = 3;
+const MAX_PAGE = 40;
+const PAGES_PER_ROUND = 3;
+const MAX_ROUNDS = 5;
 
 @Injectable()
 export class MovieRandomizerService {
@@ -24,7 +25,15 @@ export class MovieRandomizerService {
     private readonly moviesService: MoviesService,
   ) {}
 
-  /** Picks a movie matching the user's pool filters that they haven't been assigned before. */
+  /**
+   * Picks a movie matching the user's pool filters that they haven't been
+   * assigned before. TMDB's discover endpoint has no "exclude these IDs"
+   * param, so exclusion has to happen client-side after fetching — this
+   * fetches a few random pages per round (in parallel) and keeps trying
+   * new rounds until it finds a candidate or exhausts the pool, so a large
+   * exclusion set (a long rating history) degrades gracefully instead of
+   * failing after checking only a handful of movies.
+   */
   async pickForUser(filters: RandomizerFilters, excludeTmdbIds: Set<number>): Promise<Movie> {
     const discoverFilters: DiscoverFilters = {
       minVotes: filters.minTmdbVotes ?? 500,
@@ -41,16 +50,22 @@ export class MovieRandomizerService {
       throw new NotFoundException('No movies match your rating pool filters right now');
     }
 
-    const triedPages = new Set<number>();
+    const cap = Math.min(first.total_pages, MAX_PAGE);
+    const triedPages = new Set([1]);
     let candidates = this.excludeAssigned(first.results, excludeTmdbIds);
 
-    for (let attempt = 0; candidates.length === 0 && attempt < MAX_ATTEMPTS; attempt++) {
-      const page = this.randomPage(first.total_pages, triedPages);
-      if (page === null) break;
-      triedPages.add(page);
+    for (let round = 0; candidates.length === 0 && round < MAX_ROUNDS && triedPages.size < cap; round++) {
+      const pages = this.pickRandomPages(cap, triedPages, PAGES_PER_ROUND);
+      if (pages.length === 0) break;
+      pages.forEach((page) => triedPages.add(page));
 
-      const batch = await this.tmdbService.discover({ ...discoverFilters, page });
-      candidates = this.excludeAssigned(batch.results, excludeTmdbIds);
+      const batches = await Promise.all(
+        pages.map((page) => this.tmdbService.discover({ ...discoverFilters, page })),
+      );
+      candidates = this.excludeAssigned(
+        batches.flatMap((batch) => batch.results),
+        excludeTmdbIds,
+      );
     }
 
     if (candidates.length === 0) {
@@ -68,14 +83,16 @@ export class MovieRandomizerService {
     return results.filter((movie) => !excludeTmdbIds.has(movie.id));
   }
 
-  private randomPage(totalPages: number, tried: Set<number>): number | null {
-    const cap = Math.min(totalPages, MAX_PAGE);
-    if (tried.size >= cap) return null;
-
-    let page: number;
-    do {
-      page = Math.floor(Math.random() * cap) + 1;
-    } while (tried.has(page));
-    return page;
+  /** Up to `count` distinct page numbers (1..cap) not already in `tried`, in random order. */
+  private pickRandomPages(cap: number, tried: Set<number>, count: number): number[] {
+    const available: number[] = [];
+    for (let page = 1; page <= cap; page++) {
+      if (!tried.has(page)) available.push(page);
+    }
+    for (let i = available.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [available[i], available[j]] = [available[j], available[i]];
+    }
+    return available.slice(0, count);
   }
 }
