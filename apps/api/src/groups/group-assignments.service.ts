@@ -1,8 +1,9 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import type { AssignmentDto, GroupMode } from '@ratingapp/shared-types';
-import { IsNull, Repository } from 'typeorm';
+import type { AssignmentDto, GroupHistoryEntryDto, GroupMode } from '@ratingapp/shared-types';
+import { In, IsNull, Not, Repository } from 'typeorm';
 import { Assignment } from '../assignments/entities/assignment.entity';
+import { Movie } from '../movies/entities/movie.entity';
 import { MovieRandomizerService } from '../movies/movie-randomizer.service';
 import { MoviesService } from '../movies/movies.service';
 import { RatingsService } from '../ratings/ratings.service';
@@ -77,6 +78,80 @@ export class GroupAssignmentsService {
 
     const next = await this.getOrCreateActive(userId, groupId, membership.group.mode);
     return this.toDto(next);
+  }
+
+  /** A group's watch history, most recent first — shape depends on the group's mode. */
+  async getHistory(userId: string, groupId: string): Promise<GroupHistoryEntryDto[]> {
+    const membership = await this.requireMembership(userId, groupId);
+    return membership.group.mode === 'individual'
+      ? this.getIndividualHistory(groupId)
+      : this.getSyncHistory(groupId);
+  }
+
+  /** Sync mode: completed cycles — movies the whole group watched together. */
+  private async getSyncHistory(groupId: string): Promise<GroupHistoryEntryDto[]> {
+    const cycles = await this.groupCyclesRepository.find({
+      where: { groupId, completedAt: Not(IsNull()) },
+      relations: ['movie'],
+      order: { number: 'DESC' },
+    });
+    const withMovie = cycles.filter((cycle): cycle is GroupCycle & { movie: Movie } => cycle.movie !== null);
+    if (withMovie.length === 0) return [];
+
+    const cycleIds = withMovie.map((c) => c.id);
+    const rows = await this.assignmentsRepository
+      .createQueryBuilder('a')
+      .innerJoin('ratings', 'r', 'r.assignment_id = a.id')
+      .select('a.group_cycle_id', 'cycleId')
+      .addSelect('AVG(r.score)', 'avgScore')
+      .addSelect('COUNT(r.id)', 'count')
+      .where('a.group_cycle_id IN (:...cycleIds)', { cycleIds })
+      .groupBy('a.group_cycle_id')
+      .getRawMany<{ cycleId: string; avgScore: string; count: string }>();
+    const statsByCycleId = new Map(rows.map((r) => [r.cycleId, { avg: Number(r.avgScore), count: Number(r.count) }]));
+
+    return withMovie.map((cycle) => {
+      const stats = statsByCycleId.get(cycle.id);
+      return {
+        id: cycle.id,
+        movie: this.moviesService.toDto(cycle.movie),
+        completedAt: cycle.completedAt!.toISOString(),
+        watchedBy: null,
+        groupScore: { averageScore: stats ? Math.round(stats.avg * 10) / 10 : null, ratingsCount: stats?.count ?? 0 },
+      };
+    });
+  }
+
+  /** Individual mode: every member's own resolved movies, tagged with who watched it. */
+  private async getIndividualHistory(groupId: string): Promise<GroupHistoryEntryDto[]> {
+    const assignments = await this.assignmentsRepository.find({
+      where: { groupId, groupCycleId: IsNull(), status: In(['rated', 'skipped']) },
+      relations: ['movie', 'user'],
+      order: { resolvedAt: 'DESC' },
+    });
+    if (assignments.length === 0) return [];
+
+    const assignmentIds = assignments.map((a) => a.id);
+    const scoreRows = await this.assignmentsRepository
+      .createQueryBuilder('a')
+      .innerJoin('ratings', 'r', 'r.assignment_id = a.id')
+      .select('a.id', 'assignmentId')
+      .addSelect('r.score', 'score')
+      .where('a.id IN (:...assignmentIds)', { assignmentIds })
+      .getRawMany<{ assignmentId: string; score: string }>();
+    const scoreByAssignmentId = new Map(scoreRows.map((r) => [r.assignmentId, Number(r.score)]));
+
+    return assignments.map((a) => ({
+      id: a.id,
+      movie: this.moviesService.toDto(a.movie),
+      completedAt: (a.resolvedAt as Date).toISOString(),
+      watchedBy: {
+        userId: a.user.id,
+        username: a.user.username,
+        score: scoreByAssignmentId.get(a.id) ?? null,
+      },
+      groupScore: null,
+    }));
   }
 
   private async requireMembership(userId: string, groupId: string): Promise<GroupMember> {

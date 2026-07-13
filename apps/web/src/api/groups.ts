@@ -3,6 +3,7 @@ import type {
   CreateGroupRequest,
   GroupDetailDto,
   GroupDto,
+  GroupHistoryEntryDto,
   GroupInviteDto,
   JoinGroupRequest,
   MessageResponseDto,
@@ -59,4 +60,8 @@ export function rateGroupAssignment(groupId: string, assignmentId: string, data:
     method: 'POST',
     body: JSON.stringify(data),
   });
+}
+
+export function fetchGroupHistory(groupId: string) {
+  return apiFetch<GroupHistoryEntryDto[]>(`/groups/${groupId}/history`);
 }

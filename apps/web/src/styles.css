@@ -757,3 +757,56 @@ body {
   border-top: 1px solid #2c2c35;
 }
 
+.group-history {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #2c2c35;
+}
+
+.group-history h2 {
+  margin: 0 0 0.9rem;
+  font-size: 1.1rem;
+}
+
+.group-history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.group-history-row {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.7rem 0.9rem;
+  background: var(--surface);
+  border: 1px solid #26262f;
+  border-radius: 10px;
+}
+
+.group-history-poster {
+  width: 42px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.group-history-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.group-history-title {
+  font-weight: 600;
+}
+
+.group-history-meta {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+

@@ -4,12 +4,16 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { User } from '../users/entities/user.entity';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { JoinGroupDto } from './dto/join-group.dto';
+import { GroupAssignmentsService } from './group-assignments.service';
 import { GroupsService } from './groups.service';
 
 @UseGuards(JwtAuthGuard)
 @Controller('groups')
 export class GroupsController {
-  constructor(private readonly groupsService: GroupsService) {}
+  constructor(
+    private readonly groupsService: GroupsService,
+    private readonly groupAssignmentsService: GroupAssignmentsService,
+  ) {}
 
   @Get()
   listMine(@CurrentUser() user: User) {
@@ -39,5 +43,10 @@ export class GroupsController {
   @Post(':id/leave')
   leave(@CurrentUser() user: User, @Param('id') id: string) {
     return this.groupsService.leaveGroup(user.id, id);
+  }
+
+  @Get(':id/history')
+  getHistory(@CurrentUser() user: User, @Param('id') id: string) {
+    return this.groupAssignmentsService.getHistory(user.id, id);
   }
 }

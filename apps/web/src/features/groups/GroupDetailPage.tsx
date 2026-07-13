@@ -1,9 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { AssignmentDto } from '@ratingapp/shared-types';
+import type { AssignmentDto, GroupMode } from '@ratingapp/shared-types';
 import { ChangeEvent, FormEvent, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ApiError } from '../../api/client';
-import { createInvite, fetchGroupAssignment, fetchGroupDetail, leaveGroup, rateGroupAssignment, skipGroupAssignment } from '../../api/groups';
+import {
+  createInvite,
+  fetchGroupAssignment,
+  fetchGroupDetail,
+  fetchGroupHistory,
+  leaveGroup,
+  rateGroupAssignment,
+  skipGroupAssignment,
+} from '../../api/groups';
+import { getCurrentUserId } from '../../api/token-storage';
 import { Countdown } from '../../components/Countdown';
 import { Modal } from '../../components/Modal';
 import { PageLoader } from '../../components/PageLoader';
@@ -61,6 +70,8 @@ export function GroupDetailPage() {
       </p>
 
       <GroupMovieSection groupId={data.id} />
+
+      <GroupHistorySection groupId={data.id} mode={data.mode} />
 
       {showMembers && (
         <Modal title={`${data.name} — members`} onClose={() => setShowMembers(false)}>
@@ -301,6 +312,69 @@ function GroupMovieSection({ groupId }: { groupId: string }) {
           </form>
         )}
       </div>
+    </div>
+  );
+}
+
+function GroupHistorySection({ groupId, mode }: { groupId: string; mode: GroupMode }) {
+  const currentUserId = getCurrentUserId();
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['groups', groupId, 'history'],
+    queryFn: () => fetchGroupHistory(groupId),
+  });
+
+  if (isLoading || isError || !data) return null;
+
+  return (
+    <div className="group-history">
+      <h2>{mode === 'sync' ? 'Watched together' : 'Movies watched'}</h2>
+
+      {data.length === 0 ? (
+        <p className="placeholder-copy">No completed movies yet.</p>
+      ) : (
+        <ul className="group-history-list">
+          {data.map((entry) => (
+            <li key={entry.id} className="group-history-row">
+              {entry.movie.posterUrl && (
+                <img
+                  className="group-history-poster"
+                  src={entry.movie.posterUrl}
+                  alt={`${entry.movie.title} poster`}
+                  loading="lazy"
+                  decoding="async"
+                />
+              )}
+              <div className="group-history-info">
+                <span className="group-history-title">
+                  {entry.movie.title} <span className="movie-year">({entry.movie.year})</span>
+                </span>
+                <span className="group-history-meta">
+                  {new Date(entry.completedAt).toLocaleDateString()}
+                  {entry.watchedBy && (
+                    <> · {entry.watchedBy.userId === currentUserId ? 'You' : entry.watchedBy.username}</>
+                  )}
+                </span>
+              </div>
+              {entry.watchedBy && (
+                <div className="score-block">
+                  <span className="score-value">
+                    {entry.watchedBy.score !== null ? entry.watchedBy.score.toFixed(1) : '—'}
+                  </span>
+                  <span className="score-label">{entry.watchedBy.score !== null ? 'Score' : 'Skipped'}</span>
+                </div>
+              )}
+              {entry.groupScore && (
+                <div className="score-block">
+                  <span className="score-value">
+                    {entry.groupScore.averageScore !== null ? entry.groupScore.averageScore.toFixed(1) : '—'}
+                  </span>
+                  <span className="score-label">Group</span>
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

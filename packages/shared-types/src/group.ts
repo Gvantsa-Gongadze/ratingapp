@@ -1,3 +1,5 @@
+import type { MovieDto } from './movie';
+
 export type GroupMode = 'sync' | 'individual';
 export type GroupRole = 'owner' | 'member';
 
@@ -36,4 +38,18 @@ export interface GroupInviteDto {
   code: string;
   expiresAt: string | null;
   maxUses: number | null;
+}
+
+/**
+ * One completed watch in a group's history. Sync mode: the whole group
+ * watched it together, so `watchedBy` is null and `groupScore` is the
+ * aggregate. Individual mode: `watchedBy` identifies which member watched
+ * it and `groupScore` is null.
+ */
+export interface GroupHistoryEntryDto {
+  id: string;
+  movie: MovieDto;
+  completedAt: string;
+  watchedBy: { userId: string; username: string; score: number | null } | null;
+  groupScore: { averageScore: number | null; ratingsCount: number } | null;
 }
