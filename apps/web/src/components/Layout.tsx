@@ -1,7 +1,11 @@
 import { Suspense } from 'react';
-import { Link, Outlet, useNavigate } from 'react-router-dom';
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../api/auth-context';
 import { PageLoader } from './PageLoader';
+
+function navLinkClassName({ isActive }: { isActive: boolean }) {
+  return isActive ? 'active' : undefined;
+}
 
 export function Layout() {
   const { isAuthenticated, logout } = useAuth();
@@ -19,11 +23,17 @@ export function Layout() {
           RatingApp
         </Link>
         <nav>
-          <Link to="/home">Today's movie</Link>
+          <NavLink to="/home" className={navLinkClassName}>
+            Today's movie
+          </NavLink>
           {isAuthenticated && (
             <>
-              <Link to="/rankings">Rankings</Link>
-              <Link to="/groups">Groups</Link>
+              <NavLink to="/rankings" className={navLinkClassName}>
+                Rankings
+              </NavLink>
+              <NavLink to="/groups" className={navLinkClassName}>
+                Groups
+              </NavLink>
             </>
           )}
           {isAuthenticated ? (
@@ -31,7 +41,9 @@ export function Layout() {
               Log out
             </button>
           ) : (
-            <Link to="/auth">Log in / Sign up</Link>
+            <NavLink to="/auth" className={navLinkClassName}>
+              Log in / Sign up
+            </NavLink>
           )}
         </nav>
       </header>
