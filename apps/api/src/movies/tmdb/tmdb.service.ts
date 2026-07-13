@@ -53,8 +53,11 @@ export class TmdbService {
     if (filters.minRuntime) params['with_runtime.gte'] = String(filters.minRuntime);
     if (filters.maxRuntime) params['with_runtime.lte'] = String(filters.maxRuntime);
 
+    // TMDB treats comma-joined with_genres as AND (must match every genre) but
+    // pipe-joined as OR — preferring multiple genres should widen the pool
+    // ("any of these"), not narrow it to their near-empty intersection.
     const includeIds = (filters.genresInclude ?? []).map(genreNameToId).filter(Boolean);
-    if (includeIds.length > 0) params.with_genres = includeIds.join(',');
+    if (includeIds.length > 0) params.with_genres = includeIds.join('|');
 
     const excludeIds = (filters.genresExclude ?? []).map(genreNameToId).filter(Boolean);
     if (excludeIds.length > 0) params.without_genres = excludeIds.join(',');
