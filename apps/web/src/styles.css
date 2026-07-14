@@ -82,24 +82,16 @@ body {
   color: var(--error);
 }
 
-.current-movie-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.current-movie-header h1 {
-  margin: 0;
-}
-
+.current-movie-header,
 .group-detail-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
 }
 
+.current-movie-header h1,
 .group-detail-header h1 {
   margin: 0;
 }
@@ -213,6 +205,7 @@ body {
 
 .movie-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.75rem;
 }
 
@@ -246,9 +239,21 @@ body {
   cursor: pointer;
 }
 
+.btn-accent {
+  padding: 0.65rem 1rem;
+  border-radius: 6px;
+  border: 1px solid var(--accent);
+  background: rgba(232, 176, 60, 0.12);
+  color: var(--accent);
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
 .rate-form button[type="submit"]:disabled,
 .btn-secondary:disabled,
-.btn-primary:disabled {
+.btn-primary:disabled,
+.btn-accent:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
@@ -263,11 +268,17 @@ body {
   background: rgba(255, 255, 255, 0.04);
 }
 
+.btn-accent:hover:not(:disabled) {
+  background: rgba(232, 176, 60, 0.22);
+  border-color: var(--accent);
+}
+
 .pagination {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1.25rem;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
   margin-top: 1.5rem;
 }
 
@@ -282,9 +293,17 @@ body {
   gap: 0.5rem;
   margin-bottom: 1.5rem;
   border-bottom: 1px solid #2c2c35;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .tabs button {
+  flex-shrink: 0;
   padding: 0.6rem 0.25rem;
   margin-right: 1.25rem;
   background: none;
@@ -352,6 +371,8 @@ body {
 }
 
 .auth-form select {
+  width: 100%;
+  min-width: 0;
   padding-right: 2.5rem;
   appearance: none;
   -webkit-appearance: none;
@@ -798,6 +819,10 @@ body {
   border-bottom: 1px solid #2c2c35;
 }
 
+.group-forms > form {
+  flex: 1 1 280px;
+}
+
 .group-members-link {
   background: none;
   border: none;
@@ -1065,6 +1090,156 @@ body {
 
 .preferences-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.75rem;
   align-items: center;
+}
+
+@media (max-width: 640px) {
+  .app-header {
+    justify-content: center;
+    padding: 0.85rem 1rem;
+  }
+
+  .app-header nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 500;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    gap: 0;
+    background: var(--surface);
+    border-top: 1px solid #26262f;
+    padding: 0.5rem 0.5rem calc(0.5rem + env(safe-area-inset-bottom));
+  }
+
+  .app-header nav a {
+    flex: 1;
+    text-align: center;
+    padding: 0.35rem 0.25rem;
+    font-size: 0.8rem;
+  }
+
+  .app-main {
+    padding: 1.5rem 1rem calc(4.5rem + env(safe-area-inset-bottom));
+  }
+
+  h1 {
+    font-size: 1.6rem;
+  }
+
+  .current-movie-header {
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+  }
+
+  .current-movie-header h1 {
+    font-size: 1.15rem;
+    line-height: 1.25;
+  }
+
+  .current-movie-header .btn-accent {
+    padding: 0.5rem 0.65rem;
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+
+  .movie-card {
+    flex-direction: column;
+  }
+
+  .movie-poster {
+    align-self: center;
+  }
+
+  .ranking-item {
+    padding: 0.6rem 0.7rem;
+  }
+
+  .ranking-row {
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+  }
+
+  .ranking-rank {
+    width: 1.4rem;
+    height: 1.4rem;
+    border-radius: 6px;
+    font-size: 0.7rem;
+  }
+
+  .ranking-poster {
+    width: 36px;
+  }
+
+  .ranking-info {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .ranking-title {
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .ranking-meta-row {
+    overflow: hidden;
+  }
+
+  .ranking-meta {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .score-block {
+    min-width: 2.5rem;
+    padding: 0.25rem 0.35rem;
+  }
+
+  .score-value {
+    font-size: 0.95rem;
+  }
+
+  .score-label {
+    font-size: 0.6rem;
+  }
+
+  .ranking-timestamp {
+    width: auto;
+    font-size: 0.7rem;
+  }
+
+  .settings-card {
+    padding: 1.25rem;
+  }
+
+  .account-form-card {
+    padding: 1.1rem;
+  }
+
+  .profile-summary {
+    gap: 0.75rem;
+  }
+
+  .modal-backdrop {
+    padding: 1rem;
+  }
+
+  .modal-header {
+    padding: 1rem 1.25rem;
+  }
+
+  .modal-body {
+    padding: 1.25rem;
+  }
+
+  .year-range-inputs {
+    gap: 1rem;
+  }
 }

@@ -107,7 +107,7 @@ export function CurrentMoviePage() {
     <section className="current-movie">
       <div className="current-movie-header">
         <h1>Your movie today</h1>
-        <button type="button" className="btn-secondary" onClick={() => setShowPreferences(true)}>
+        <button type="button" className="btn-accent" onClick={() => setShowPreferences(true)}>
           Movie preferences
         </button>
       </div>
