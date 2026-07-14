@@ -256,6 +256,16 @@ body {
   cursor: not-allowed;
 }
 
+.rate-form button[type="submit"]:hover:not(:disabled),
+.btn-primary:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  border-color: #3a3a46;
+  background: rgba(255, 255, 255, 0.04);
+}
+
 .pagination {
   display: flex;
   align-items: center;
@@ -374,6 +384,22 @@ body {
 .auth-form button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.auth-form button.btn-secondary {
+  background: transparent;
+  border: 1px solid #2c2c35;
+  color: var(--text);
+}
+
+.auth-form button:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.auth-form button.btn-secondary:hover:not(:disabled) {
+  filter: none;
+  border-color: #3a3a46;
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .auth-error {
@@ -971,4 +997,10 @@ body {
 
 .year-range-inputs select {
   max-width: 8rem;
+}
+
+.preferences-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
 }

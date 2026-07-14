@@ -12,6 +12,12 @@ function nextState(current: GenreState): GenreState {
   return 'neutral';
 }
 
+function sameGenreSet(a: string[], b: string[]) {
+  if (a.length !== b.length) return false;
+  const setB = new Set(b);
+  return a.every((genre) => setB.has(genre));
+}
+
 export function GenrePreferencesSection() {
   const queryClient = useQueryClient();
   const queryKey = ['users', 'settings'];
@@ -50,15 +56,28 @@ export function GenrePreferencesSection() {
     });
   }
 
-  function handleSave() {
-    if (!genreStates) return;
-    const genresInclude = Object.entries(genreStates)
+  function getCurrentSelection(states: Record<string, GenreState>) {
+    const genresInclude = Object.entries(states)
       .filter(([, state]) => state === 'include')
       .map(([genre]) => genre);
-    const genresExclude = Object.entries(genreStates)
+    const genresExclude = Object.entries(states)
       .filter(([, state]) => state === 'exclude')
       .map(([genre]) => genre);
-    mutation.mutate({ genresInclude, genresExclude });
+    return { genresInclude, genresExclude };
+  }
+
+  function handleSave() {
+    if (!genreStates) return;
+    mutation.mutate(getCurrentSelection(genreStates));
+  }
+
+  function handleClear() {
+    setGenreStates((prev) => {
+      if (!prev) return prev;
+      const cleared: Record<string, GenreState> = {};
+      for (const genre of Object.keys(prev)) cleared[genre] = 'neutral';
+      return cleared;
+    });
   }
 
   if (isLoading) return <PageLoader />;
@@ -73,6 +92,12 @@ export function GenrePreferencesSection() {
   }
 
   if (!data || !genreStates) return null;
+
+  const hasSelection = Object.values(genreStates).some((state) => state !== 'neutral');
+  const currentSelection = getCurrentSelection(genreStates);
+  const hasChanges =
+    !sameGenreSet(currentSelection.genresInclude, data.settings.genresInclude ?? []) ||
+    !sameGenreSet(currentSelection.genresExclude, data.settings.genresExclude ?? []);
 
   return (
     <>
@@ -99,11 +124,24 @@ export function GenrePreferencesSection() {
           {mutation.error instanceof ApiError ? mutation.error.message : 'Could not save your preferences'}
         </p>
       )}
-      {mutation.isSuccess && <p className="status-ok">Saved.</p>}
-
-      <button type="button" className="btn-primary" onClick={handleSave} disabled={mutation.isPending}>
-        {mutation.isPending ? 'Saving…' : 'Save preferences'}
-      </button>
+      <div className="preferences-actions">
+        <button
+          type="button"
+          className="btn-primary"
+          onClick={handleSave}
+          disabled={mutation.isPending || !hasChanges}
+        >
+          {mutation.isPending ? 'Saving…' : 'Save preferences'}
+        </button>
+        <button
+          type="button"
+          className="btn-secondary"
+          onClick={handleClear}
+          disabled={mutation.isPending || !hasSelection}
+        >
+          Clear
+        </button>
+      </div>
     </>
   );
 }

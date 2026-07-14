@@ -38,6 +38,7 @@ export function YearRangeSection() {
   });
 
   const isRangeInvalid = minYear !== '' && maxYear !== '' && Number(minYear) > Number(maxYear);
+  const hasRange = minYear !== '' || maxYear !== '';
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -46,6 +47,11 @@ export function YearRangeSection() {
       minYear: minYear === '' ? null : Number(minYear),
       maxYear: maxYear === '' ? null : Number(maxYear),
     });
+  }
+
+  function handleClear() {
+    setMinYear('');
+    setMaxYear('');
   }
 
   if (isLoading) return <PageLoader />;
@@ -60,6 +66,10 @@ export function YearRangeSection() {
   }
 
   if (!data) return null;
+
+  const currentMinYear = minYear === '' ? null : Number(minYear);
+  const currentMaxYear = maxYear === '' ? null : Number(maxYear);
+  const hasChanges = currentMinYear !== data.settings.minYear || currentMaxYear !== data.settings.maxYear;
 
   return (
     <form className="auth-form" onSubmit={handleSubmit}>
@@ -98,11 +108,23 @@ export function YearRangeSection() {
           {mutation.error instanceof ApiError ? mutation.error.message : 'Could not save your preferences'}
         </p>
       )}
-      {mutation.isSuccess && <p className="status-ok">Saved.</p>}
-
-      <button type="submit" className="btn-primary" disabled={mutation.isPending || isRangeInvalid}>
-        {mutation.isPending ? 'Saving…' : 'Save time period'}
-      </button>
+      <div className="preferences-actions">
+        <button
+          type="submit"
+          className="btn-primary"
+          disabled={mutation.isPending || isRangeInvalid || !hasChanges}
+        >
+          {mutation.isPending ? 'Saving…' : 'Save time period'}
+        </button>
+        <button
+          type="button"
+          className="btn-secondary"
+          onClick={handleClear}
+          disabled={mutation.isPending || !hasRange}
+        >
+          Clear
+        </button>
+      </div>
     </form>
   );
 }
