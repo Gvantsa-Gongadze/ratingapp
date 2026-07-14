@@ -70,6 +70,18 @@ export class UsersService {
     return { settings: this.toSettingsDto(saved), availableGenres: GENRE_NAMES };
   }
 
+  async updateMinRating(userId: string, minRating: number | null): Promise<UserSettingsResponseDto> {
+    const existing = await this.userSettingsRepository.findOneBy({ userId });
+    const settings = this.userSettingsRepository.create({
+      ...existing,
+      userId,
+      minTmdbRating: minRating,
+    });
+    const saved = await this.userSettingsRepository.save(settings);
+
+    return { settings: this.toSettingsDto(saved), availableGenres: GENRE_NAMES };
+  }
+
   private toSettingsDto(settings: UserSettings | null): UserSettingsDto {
     return {
       minYear: settings?.minYear ?? null,
@@ -77,6 +89,7 @@ export class UsersService {
       minRuntime: settings?.minRuntime ?? null,
       maxRuntime: settings?.maxRuntime ?? null,
       minTmdbVotes: settings?.minTmdbVotes ?? null,
+      minTmdbRating: settings?.minTmdbRating ?? null,
       genresInclude: settings?.genresInclude ?? null,
       genresExclude: settings?.genresExclude ?? null,
     };

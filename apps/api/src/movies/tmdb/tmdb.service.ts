@@ -10,6 +10,7 @@ export interface DiscoverFilters {
   maxYear?: number | null;
   minRuntime?: number | null;
   maxRuntime?: number | null;
+  minRating?: number | null;
   genresInclude?: string[] | null;
   genresExclude?: string[] | null;
 }
@@ -52,6 +53,7 @@ export class TmdbService {
     if (filters.maxYear) params['primary_release_date.lte'] = `${filters.maxYear}-12-31`;
     if (filters.minRuntime) params['with_runtime.gte'] = String(filters.minRuntime);
     if (filters.maxRuntime) params['with_runtime.lte'] = String(filters.maxRuntime);
+    if (filters.minRating) params['vote_average.gte'] = String(filters.minRating);
 
     // TMDB treats comma-joined with_genres as AND (must match every genre) but
     // pipe-joined as OR — preferring multiple genres should widen the pool

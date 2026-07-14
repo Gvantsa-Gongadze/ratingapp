@@ -3,6 +3,7 @@ import type {
   ChangePasswordRequest,
   MessageResponseDto,
   UpdateGenrePreferencesRequest,
+  UpdateMinRatingRequest,
   UpdateYearRangeRequest,
   UserSettingsResponseDto,
 } from '@ratingapp/shared-types';
@@ -21,6 +22,13 @@ export function updateGenrePreferences(data: UpdateGenrePreferencesRequest) {
 
 export function updateYearRange(data: UpdateYearRangeRequest) {
   return apiFetch<UserSettingsResponseDto>('/users/settings/year-range', {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
+export function updateMinRating(data: UpdateMinRatingRequest) {
+  return apiFetch<UserSettingsResponseDto>('/users/settings/rating', {
     method: 'PATCH',
     body: JSON.stringify(data),
   });

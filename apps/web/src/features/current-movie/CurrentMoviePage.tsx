@@ -6,6 +6,7 @@ import { ApiError } from '../../api/client';
 import { Countdown } from '../../components/Countdown';
 import { Modal } from '../../components/Modal';
 import { GenrePreferencesSection } from '../settings/GenrePreferencesSection';
+import { RatingSection } from '../settings/RatingSection';
 import { YearRangeSection } from '../settings/YearRangeSection';
 
 const ASSIGNMENT_QUERY_KEY = ['assignment', 'current'];
@@ -224,6 +225,10 @@ export function CurrentMoviePage() {
           <div className="preferences-section">
             <h3>Time period</h3>
             <YearRangeSection />
+          </div>
+          <div className="preferences-section">
+            <h3>Rating</h3>
+            <RatingSection />
           </div>
         </Modal>
       )}

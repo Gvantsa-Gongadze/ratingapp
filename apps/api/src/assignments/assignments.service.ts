@@ -104,6 +104,7 @@ export class AssignmentsService {
         minRuntime: settings?.minRuntime,
         maxRuntime: settings?.maxRuntime,
         minTmdbVotes: settings?.minTmdbVotes,
+        minTmdbRating: settings?.minTmdbRating,
         genresInclude: settings?.genresInclude,
         genresExclude: settings?.genresExclude,
       },

@@ -25,6 +25,9 @@ export class UserSettings {
   @Column({ name: 'min_tmdb_votes', type: 'int', nullable: true })
   minTmdbVotes: number | null;
 
+  @Column({ name: 'min_tmdb_rating', type: 'real', nullable: true })
+  minTmdbRating: number | null;
+
   @Column({ name: 'min_runtime', type: 'int', nullable: true })
   minRuntime: number | null;
 

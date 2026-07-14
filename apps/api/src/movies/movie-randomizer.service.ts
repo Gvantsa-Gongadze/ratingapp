@@ -10,6 +10,7 @@ export interface RandomizerFilters {
   minRuntime?: number | null;
   maxRuntime?: number | null;
   minTmdbVotes?: number | null;
+  minTmdbRating?: number | null;
   genresInclude?: string[] | null;
   genresExclude?: string[] | null;
 }
@@ -41,6 +42,7 @@ export class MovieRandomizerService {
       maxYear: filters.maxYear,
       minRuntime: filters.minRuntime,
       maxRuntime: filters.maxRuntime,
+      minRating: filters.minTmdbRating,
       genresInclude: filters.genresInclude,
       genresExclude: filters.genresExclude,
     };

@@ -18,6 +18,7 @@ export interface UserSettingsDto {
   minRuntime: number | null;
   maxRuntime: number | null;
   minTmdbVotes: number | null;
+  minTmdbRating: number | null;
   genresInclude: string[] | null;
   genresExclude: string[] | null;
 }
@@ -36,4 +37,8 @@ export interface UpdateGenrePreferencesRequest {
 export interface UpdateYearRangeRequest {
   minYear: number | null;
   maxYear: number | null;
+}
+
+export interface UpdateMinRatingRequest {
+  minRating: number | null;
 }
