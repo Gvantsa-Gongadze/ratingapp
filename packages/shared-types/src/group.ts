@@ -40,6 +40,20 @@ export interface GroupInviteDto {
   maxUses: number | null;
 }
 
+export interface GroupSettingsDto {
+  minYear: number | null;
+  maxYear: number | null;
+  minTmdbRating: number | null;
+  genresInclude: string[] | null;
+  genresExclude: string[] | null;
+}
+
+export interface GroupSettingsResponseDto {
+  settings: GroupSettingsDto;
+  /** Canonical genre names the picker should offer. */
+  availableGenres: string[];
+}
+
 /**
  * One completed watch in a group's history. Sync mode: the whole group
  * watched it together, so `watchedBy` is null and `groupScore` is the

@@ -1,4 +1,6 @@
+import type { QueryKey } from '@tanstack/react-query';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { UpdateYearRangeRequest } from '@ratingapp/shared-types';
 import { FormEvent, useEffect, useState } from 'react';
 import { ApiError } from '../../api/client';
 import { fetchUserSettings, updateYearRange } from '../../api/users';
@@ -8,13 +10,29 @@ const MIN_YEAR = 1874;
 const MAX_YEAR = new Date().getFullYear() + 1;
 const YEAR_OPTIONS = Array.from({ length: MAX_YEAR - MIN_YEAR + 1 }, (_, i) => MAX_YEAR - i);
 
-export function YearRangeSection() {
+interface YearRangeData {
+  settings: { minYear: number | null; maxYear: number | null };
+}
+
+interface YearRangeSectionProps {
+  fetchSettings?: () => Promise<YearRangeData>;
+  updateSettings?: (data: UpdateYearRangeRequest) => Promise<unknown>;
+  queryKey?: QueryKey;
+  /** Members other than the group owner can see this preference but not edit it. */
+  readOnly?: boolean;
+}
+
+export function YearRangeSection({
+  fetchSettings = fetchUserSettings,
+  updateSettings = updateYearRange,
+  queryKey = ['users', 'settings'],
+  readOnly = false,
+}: YearRangeSectionProps = {}) {
   const queryClient = useQueryClient();
-  const queryKey = ['users', 'settings'];
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey,
-    queryFn: fetchUserSettings,
+    queryFn: fetchSettings,
     retry: false,
   });
 
@@ -31,7 +49,7 @@ export function YearRangeSection() {
   }, [data, initialized]);
 
   const mutation = useMutation({
-    mutationFn: updateYearRange,
+    mutationFn: updateSettings,
     onSuccess: (result) => {
       queryClient.setQueryData(queryKey, result);
     },
@@ -74,13 +92,15 @@ export function YearRangeSection() {
   return (
     <form className="auth-form" onSubmit={handleSubmit}>
       <p className="placeholder-copy">
-        Only get movies released in this range. Leave a field blank for no limit on that side.
+        {readOnly
+          ? 'Only the group owner can change this.'
+          : 'Only get movies released in this range. Leave a field blank for no limit on that side.'}
       </p>
 
       <div className="year-range-inputs">
         <label>
           From year
-          <select value={minYear} onChange={(event) => setMinYear(event.target.value)}>
+          <select value={minYear} onChange={(event) => setMinYear(event.target.value)} disabled={readOnly}>
             <option value="">Any</option>
             {YEAR_OPTIONS.map((year) => (
               <option key={year} value={year}>
@@ -91,7 +111,7 @@ export function YearRangeSection() {
         </label>
         <label>
           To year
-          <select value={maxYear} onChange={(event) => setMaxYear(event.target.value)}>
+          <select value={maxYear} onChange={(event) => setMaxYear(event.target.value)} disabled={readOnly}>
             <option value="">Any</option>
             {YEAR_OPTIONS.map((year) => (
               <option key={year} value={year}>
@@ -102,29 +122,33 @@ export function YearRangeSection() {
         </label>
       </div>
 
-      {isRangeInvalid && <p className="auth-error">"From year" must be before "To year".</p>}
-      {mutation.isError && (
-        <p className="auth-error">
-          {mutation.error instanceof ApiError ? mutation.error.message : 'Could not save your preferences'}
-        </p>
+      {!readOnly && (
+        <>
+          {isRangeInvalid && <p className="auth-error">"From year" must be before "To year".</p>}
+          {mutation.isError && (
+            <p className="auth-error">
+              {mutation.error instanceof ApiError ? mutation.error.message : 'Could not save your preferences'}
+            </p>
+          )}
+          <div className="preferences-actions">
+            <button
+              type="submit"
+              className="btn-primary"
+              disabled={mutation.isPending || isRangeInvalid || !hasChanges}
+            >
+              {mutation.isPending ? 'Saving…' : 'Save time period'}
+            </button>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={handleClear}
+              disabled={mutation.isPending || !hasRange}
+            >
+              Clear
+            </button>
+          </div>
+        </>
       )}
-      <div className="preferences-actions">
-        <button
-          type="submit"
-          className="btn-primary"
-          disabled={mutation.isPending || isRangeInvalid || !hasChanges}
-        >
-          {mutation.isPending ? 'Saving…' : 'Save time period'}
-        </button>
-        <button
-          type="button"
-          className="btn-secondary"
-          onClick={handleClear}
-          disabled={mutation.isPending || !hasRange}
-        >
-          Clear
-        </button>
-      </div>
     </form>
   );
 }

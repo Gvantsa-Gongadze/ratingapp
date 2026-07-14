@@ -1,13 +1,14 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import type { AssignmentDto, GroupHistoryEntryDto, GroupMode } from '@ratingapp/shared-types';
+import type { AssignmentDto, GroupHistoryEntryDto } from '@ratingapp/shared-types';
 import { In, IsNull, Not, Repository } from 'typeorm';
 import { Assignment } from '../assignments/entities/assignment.entity';
 import { Movie } from '../movies/entities/movie.entity';
 import { MovieRandomizerService } from '../movies/movie-randomizer.service';
+import type { RandomizerFilters } from '../movies/movie-randomizer.service';
 import { MoviesService } from '../movies/movies.service';
 import { RatingsService } from '../ratings/ratings.service';
-import { UsersService } from '../users/users.service';
+import { Group } from './entities/group.entity';
 import { GroupCycle } from './entities/group-cycle.entity';
 import { GroupMember } from './entities/group-member.entity';
 
@@ -22,7 +23,6 @@ export class GroupAssignmentsService {
     private readonly groupCyclesRepository: Repository<GroupCycle>,
     @InjectRepository(GroupMember)
     private readonly groupMembersRepository: Repository<GroupMember>,
-    private readonly usersService: UsersService,
     private readonly moviesService: MoviesService,
     private readonly randomizer: MovieRandomizerService,
     private readonly ratingsService: RatingsService,
@@ -30,7 +30,7 @@ export class GroupAssignmentsService {
 
   async getCurrent(userId: string, groupId: string): Promise<AssignmentDto> {
     const membership = await this.requireMembership(userId, groupId);
-    const assignment = await this.getOrCreateActive(userId, groupId, membership.group.mode);
+    const assignment = await this.getOrCreateActive(userId, groupId, membership.group);
     return this.toDto(assignment);
   }
 
@@ -45,7 +45,7 @@ export class GroupAssignmentsService {
       await this.maybeCompleteCycle(groupId, assignment.groupCycleId);
     }
 
-    const next = await this.getOrCreateActive(userId, groupId, membership.group.mode);
+    const next = await this.getOrCreateActive(userId, groupId, membership.group);
     return this.toDto(next);
   }
 
@@ -76,7 +76,7 @@ export class GroupAssignmentsService {
       await this.maybeCompleteCycle(groupId, assignment.groupCycleId);
     }
 
-    const next = await this.getOrCreateActive(userId, groupId, membership.group.mode);
+    const next = await this.getOrCreateActive(userId, groupId, membership.group);
     return this.toDto(next);
   }
 
@@ -176,14 +176,14 @@ export class GroupAssignmentsService {
     return assignment;
   }
 
-  private getOrCreateActive(userId: string, groupId: string, mode: GroupMode): Promise<Assignment> {
-    return mode === 'individual'
-      ? this.getOrCreateIndividual(userId, groupId)
-      : this.getOrCreateSynced(userId, groupId);
+  private getOrCreateActive(userId: string, groupId: string, group: Group): Promise<Assignment> {
+    return group.mode === 'individual'
+      ? this.getOrCreateIndividual(userId, groupId, group)
+      : this.getOrCreateSynced(userId, groupId, group);
   }
 
-  /** Individual mode: each member gets their own random movie, same mechanics as solo assignments. */
-  private async getOrCreateIndividual(userId: string, groupId: string): Promise<Assignment> {
+  /** Individual mode: each member gets their own random movie, filtered by the group's shared preferences. */
+  private async getOrCreateIndividual(userId: string, groupId: string, group: Group): Promise<Assignment> {
     const existing = await this.assignmentsRepository.findOne({
       where: { userId, groupId, status: 'active' },
       relations: ['movie'],
@@ -198,24 +198,8 @@ export class GroupAssignmentsService {
       await this.assignmentsRepository.save(existing);
     }
 
-    const [settings, excludeTmdbIds] = await Promise.all([
-      this.usersService.findSettings(userId),
-      this.getUserExcludedTmdbIds(userId),
-    ]);
-
-    const movie = await this.randomizer.pickForUser(
-      {
-        minYear: settings?.minYear,
-        maxYear: settings?.maxYear,
-        minRuntime: settings?.minRuntime,
-        maxRuntime: settings?.maxRuntime,
-        minTmdbVotes: settings?.minTmdbVotes,
-        minTmdbRating: settings?.minTmdbRating,
-        genresInclude: settings?.genresInclude,
-        genresExclude: settings?.genresExclude,
-      },
-      excludeTmdbIds,
-    );
+    const excludeTmdbIds = await this.getUserExcludedTmdbIds(userId);
+    const movie = await this.randomizer.pickForUser(this.toRandomizerFilters(group), excludeTmdbIds);
 
     const assignment = this.assignmentsRepository.create({
       userId,
@@ -238,8 +222,8 @@ export class GroupAssignmentsService {
    * a different movie for just one person. Once every member has rated or
    * skipped, the cycle closes and the next "current" fetch starts a new one.
    */
-  private async getOrCreateSynced(userId: string, groupId: string): Promise<Assignment> {
-    const cycle = await this.getOrCreateActiveCycle(groupId, userId);
+  private async getOrCreateSynced(userId: string, groupId: string, group: Group): Promise<Assignment> {
+    const cycle = await this.getOrCreateActiveCycle(group);
     if (!cycle.movie) {
       // Invariant: getOrCreateActiveCycle always assigns a movie when it creates a cycle.
       throw new Error(`Group cycle ${cycle.id} has no movie`);
@@ -276,7 +260,8 @@ export class GroupAssignmentsService {
     return saved;
   }
 
-  private async getOrCreateActiveCycle(groupId: string, requestingUserId: string): Promise<GroupCycle> {
+  private async getOrCreateActiveCycle(group: Group): Promise<GroupCycle> {
+    const groupId = group.id;
     const active = await this.groupCyclesRepository.findOne({
       where: { groupId, completedAt: IsNull() },
       relations: ['movie'],
@@ -289,8 +274,7 @@ export class GroupAssignmentsService {
       order: { number: 'DESC' },
     });
 
-    const [settings, groupExcluded, membersExcluded] = await Promise.all([
-      this.usersService.findSettings(requestingUserId),
+    const [groupExcluded, membersExcluded] = await Promise.all([
       this.getGroupExcludedTmdbIds(groupId),
       this.getGroupMembersExcludedTmdbIds(groupId),
     ]);
@@ -299,19 +283,7 @@ export class GroupAssignmentsService {
     // another group) would get it again.
     const excludeTmdbIds = new Set([...groupExcluded, ...membersExcluded]);
 
-    const movie = await this.randomizer.pickForUser(
-      {
-        minYear: settings?.minYear,
-        maxYear: settings?.maxYear,
-        minRuntime: settings?.minRuntime,
-        maxRuntime: settings?.maxRuntime,
-        minTmdbVotes: settings?.minTmdbVotes,
-        minTmdbRating: settings?.minTmdbRating,
-        genresInclude: settings?.genresInclude,
-        genresExclude: settings?.genresExclude,
-      },
-      excludeTmdbIds,
-    );
+    const movie = await this.randomizer.pickForUser(this.toRandomizerFilters(group), excludeTmdbIds);
 
     const cycle = this.groupCyclesRepository.create({
       groupId,
@@ -340,6 +312,16 @@ export class GroupAssignmentsService {
     if (resolvedCount >= memberIds.length) {
       await this.groupCyclesRepository.update(cycleId, { completedAt: new Date() });
     }
+  }
+
+  private toRandomizerFilters(group: Group): RandomizerFilters {
+    return {
+      minYear: group.minYear,
+      maxYear: group.maxYear,
+      minTmdbRating: group.minTmdbRating,
+      genresInclude: group.genresInclude,
+      genresExclude: group.genresExclude,
+    };
   }
 
   private async getUserExcludedTmdbIds(userId: string): Promise<Set<number>> {

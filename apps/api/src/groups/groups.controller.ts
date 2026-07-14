@@ -1,6 +1,9 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { UpdateGenrePreferencesDto } from '../users/dto/update-genre-preferences.dto';
+import { UpdateMinRatingDto } from '../users/dto/update-min-rating.dto';
+import { UpdateYearRangeDto } from '../users/dto/update-year-range.dto';
 import { User } from '../users/entities/user.entity';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { JoinGroupDto } from './dto/join-group.dto';
@@ -48,5 +51,25 @@ export class GroupsController {
   @Get(':id/history')
   getHistory(@CurrentUser() user: User, @Param('id') id: string) {
     return this.groupAssignmentsService.getHistory(user.id, id);
+  }
+
+  @Get(':id/settings')
+  getSettings(@CurrentUser() user: User, @Param('id') id: string) {
+    return this.groupsService.getSettings(user.id, id);
+  }
+
+  @Patch(':id/settings/genres')
+  updateGenres(@CurrentUser() user: User, @Param('id') id: string, @Body() dto: UpdateGenrePreferencesDto) {
+    return this.groupsService.updateGenrePreferences(user.id, id, dto.genresInclude, dto.genresExclude);
+  }
+
+  @Patch(':id/settings/year-range')
+  updateYearRange(@CurrentUser() user: User, @Param('id') id: string, @Body() dto: UpdateYearRangeDto) {
+    return this.groupsService.updateYearRange(user.id, id, dto.minYear, dto.maxYear);
+  }
+
+  @Patch(':id/settings/rating')
+  updateMinRating(@CurrentUser() user: User, @Param('id') id: string, @Body() dto: UpdateMinRatingDto) {
+    return this.groupsService.updateMinRating(user.id, id, dto.minRating);
   }
 }

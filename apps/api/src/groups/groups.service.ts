@@ -6,9 +6,18 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import type { GroupDetailDto, GroupDto, GroupInviteDto, GroupMode, MessageResponseDto } from '@ratingapp/shared-types';
+import type {
+  GroupDetailDto,
+  GroupDto,
+  GroupInviteDto,
+  GroupMode,
+  GroupSettingsDto,
+  GroupSettingsResponseDto,
+  MessageResponseDto,
+} from '@ratingapp/shared-types';
 import { randomBytes } from 'crypto';
 import { Repository } from 'typeorm';
+import { GENRE_NAMES } from '../movies/tmdb/tmdb-genres';
 import { GroupInvite } from './entities/group-invite.entity';
 import { GroupMember } from './entities/group-member.entity';
 import { Group } from './entities/group.entity';
@@ -160,6 +169,88 @@ export class GroupsService {
     }
     await this.groupMembersRepository.remove(membership);
     return { message: 'You left the group' };
+  }
+
+  async getSettings(userId: string, groupId: string): Promise<GroupSettingsResponseDto> {
+    const membership = await this.groupMembersRepository.findOne({
+      where: { groupId, userId },
+      relations: ['group'],
+    });
+    if (!membership) {
+      throw new NotFoundException('Group not found');
+    }
+    return { settings: this.toSettingsDto(membership.group), availableGenres: GENRE_NAMES };
+  }
+
+  async updateGenrePreferences(
+    userId: string,
+    groupId: string,
+    genresInclude: string[],
+    genresExclude: string[],
+  ): Promise<GroupSettingsResponseDto> {
+    const overlap = genresInclude.filter((g) => genresExclude.includes(g));
+    if (overlap.length > 0) {
+      throw new BadRequestException(`A genre can't be both included and excluded: ${overlap.join(', ')}`);
+    }
+
+    const group = await this.requireOwnedGroup(userId, groupId);
+    group.genresInclude = genresInclude.length > 0 ? genresInclude : null;
+    group.genresExclude = genresExclude.length > 0 ? genresExclude : null;
+    const saved = await this.groupsRepository.save(group);
+
+    return { settings: this.toSettingsDto(saved), availableGenres: GENRE_NAMES };
+  }
+
+  async updateYearRange(
+    userId: string,
+    groupId: string,
+    minYear: number | null,
+    maxYear: number | null,
+  ): Promise<GroupSettingsResponseDto> {
+    if (minYear !== null && maxYear !== null && minYear > maxYear) {
+      throw new BadRequestException('The starting year must be before the ending year');
+    }
+
+    const group = await this.requireOwnedGroup(userId, groupId);
+    group.minYear = minYear;
+    group.maxYear = maxYear;
+    const saved = await this.groupsRepository.save(group);
+
+    return { settings: this.toSettingsDto(saved), availableGenres: GENRE_NAMES };
+  }
+
+  async updateMinRating(userId: string, groupId: string, minRating: number | null): Promise<GroupSettingsResponseDto> {
+    const group = await this.requireOwnedGroup(userId, groupId);
+    group.minTmdbRating = minRating;
+    const saved = await this.groupsRepository.save(group);
+
+    return { settings: this.toSettingsDto(saved), availableGenres: GENRE_NAMES };
+  }
+
+  private async requireOwnedGroup(userId: string, groupId: string): Promise<Group> {
+    const membership = await this.groupMembersRepository.findOneBy({ groupId, userId });
+    if (!membership) {
+      throw new NotFoundException('Group not found');
+    }
+    if (membership.role !== 'owner') {
+      throw new ForbiddenException('Only the group owner can change movie preferences');
+    }
+
+    const group = await this.groupsRepository.findOneBy({ id: groupId });
+    if (!group) {
+      throw new NotFoundException('Group not found');
+    }
+    return group;
+  }
+
+  private toSettingsDto(group: Group): GroupSettingsDto {
+    return {
+      minYear: group.minYear ?? null,
+      maxYear: group.maxYear ?? null,
+      minTmdbRating: group.minTmdbRating ?? null,
+      genresInclude: group.genresInclude ?? null,
+      genresExclude: group.genresExclude ?? null,
+    };
   }
 
   private generateSlug(name: string): string {

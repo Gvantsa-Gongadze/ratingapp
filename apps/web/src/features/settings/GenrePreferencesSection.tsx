@@ -1,10 +1,25 @@
+import type { QueryKey } from '@tanstack/react-query';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { UpdateGenrePreferencesRequest } from '@ratingapp/shared-types';
 import { useEffect, useState } from 'react';
 import { ApiError } from '../../api/client';
 import { fetchUserSettings, updateGenrePreferences } from '../../api/users';
 import { PageLoader } from '../../components/PageLoader';
 
 type GenreState = 'neutral' | 'include' | 'exclude';
+
+interface GenrePreferencesData {
+  settings: { genresInclude: string[] | null; genresExclude: string[] | null };
+  availableGenres: string[];
+}
+
+interface GenrePreferencesSectionProps {
+  fetchSettings?: () => Promise<GenrePreferencesData>;
+  updateSettings?: (data: UpdateGenrePreferencesRequest) => Promise<unknown>;
+  queryKey?: QueryKey;
+  /** Members other than the group owner can see these preferences but not edit them. */
+  readOnly?: boolean;
+}
 
 function nextState(current: GenreState): GenreState {
   if (current === 'neutral') return 'include';
@@ -18,13 +33,17 @@ function sameGenreSet(a: string[], b: string[]) {
   return a.every((genre) => setB.has(genre));
 }
 
-export function GenrePreferencesSection() {
+export function GenrePreferencesSection({
+  fetchSettings = fetchUserSettings,
+  updateSettings = updateGenrePreferences,
+  queryKey = ['users', 'settings'],
+  readOnly = false,
+}: GenrePreferencesSectionProps = {}) {
   const queryClient = useQueryClient();
-  const queryKey = ['users', 'settings'];
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey,
-    queryFn: fetchUserSettings,
+    queryFn: fetchSettings,
     retry: false,
   });
 
@@ -43,7 +62,7 @@ export function GenrePreferencesSection() {
   }, [data, genreStates]);
 
   const mutation = useMutation({
-    mutationFn: updateGenrePreferences,
+    mutationFn: updateSettings,
     onSuccess: (result) => {
       queryClient.setQueryData(queryKey, result);
     },
@@ -102,8 +121,9 @@ export function GenrePreferencesSection() {
   return (
     <>
       <p className="placeholder-copy">
-        Tap a category to cycle it through no preference → prefer → avoid. Preferred categories show up more often
-        in your daily picks; avoided ones are filtered out.
+        {readOnly
+          ? 'Only the group owner can change these.'
+          : 'Tap a category to cycle it through no preference → prefer → avoid. Preferred categories show up more often in your daily picks; avoided ones are filtered out.'}
       </p>
 
       <div className="genre-chip-list">
@@ -113,35 +133,40 @@ export function GenrePreferencesSection() {
             type="button"
             className={`genre-chip genre-chip--${genreStates[genre]}`}
             onClick={() => cycleGenre(genre)}
+            disabled={readOnly}
           >
             {genre}
           </button>
         ))}
       </div>
 
-      {mutation.isError && (
-        <p className="auth-error">
-          {mutation.error instanceof ApiError ? mutation.error.message : 'Could not save your preferences'}
-        </p>
+      {!readOnly && (
+        <>
+          {mutation.isError && (
+            <p className="auth-error">
+              {mutation.error instanceof ApiError ? mutation.error.message : 'Could not save your preferences'}
+            </p>
+          )}
+          <div className="preferences-actions">
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={handleSave}
+              disabled={mutation.isPending || !hasChanges}
+            >
+              {mutation.isPending ? 'Saving…' : 'Save preferences'}
+            </button>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={handleClear}
+              disabled={mutation.isPending || !hasSelection}
+            >
+              Clear
+            </button>
+          </div>
+        </>
       )}
-      <div className="preferences-actions">
-        <button
-          type="button"
-          className="btn-primary"
-          onClick={handleSave}
-          disabled={mutation.isPending || !hasChanges}
-        >
-          {mutation.isPending ? 'Saving…' : 'Save preferences'}
-        </button>
-        <button
-          type="button"
-          className="btn-secondary"
-          onClick={handleClear}
-          disabled={mutation.isPending || !hasSelection}
-        >
-          Clear
-        </button>
-      </div>
     </>
   );
 }

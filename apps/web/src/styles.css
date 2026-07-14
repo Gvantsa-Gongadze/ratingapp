@@ -107,6 +107,17 @@ body {
   margin: 0;
 }
 
+.group-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.group-detail-header h1 {
+  margin: 0;
+}
+
 .movie-card {
   display: flex;
   gap: 1.5rem;
@@ -369,6 +380,12 @@ body {
 .auth-form select:focus {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
+}
+
+.auth-form input:disabled,
+.auth-form select:disabled {
+  cursor: default;
+  opacity: 0.85;
 }
 
 .auth-form button {
@@ -952,8 +969,12 @@ body {
     color 0.15s ease;
 }
 
-.genre-chip:hover {
+.genre-chip:hover:not(:disabled) {
   border-color: #3a3a46;
+}
+
+.genre-chip:disabled {
+  cursor: default;
 }
 
 .genre-chip--include {

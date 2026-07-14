@@ -5,9 +5,13 @@ import type {
   GroupDto,
   GroupHistoryEntryDto,
   GroupInviteDto,
+  GroupSettingsResponseDto,
   JoinGroupRequest,
   MessageResponseDto,
   RateMovieRequest,
+  UpdateGenrePreferencesRequest,
+  UpdateMinRatingRequest,
+  UpdateYearRangeRequest,
 } from '@ratingapp/shared-types';
 import { apiFetch } from './client';
 
@@ -64,4 +68,29 @@ export function rateGroupAssignment(groupId: string, assignmentId: string, data:
 
 export function fetchGroupHistory(groupId: string) {
   return apiFetch<GroupHistoryEntryDto[]>(`/groups/${groupId}/history`);
+}
+
+export function fetchGroupSettings(groupId: string) {
+  return apiFetch<GroupSettingsResponseDto>(`/groups/${groupId}/settings`);
+}
+
+export function updateGroupGenrePreferences(groupId: string, data: UpdateGenrePreferencesRequest) {
+  return apiFetch<GroupSettingsResponseDto>(`/groups/${groupId}/settings/genres`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
+export function updateGroupYearRange(groupId: string, data: UpdateYearRangeRequest) {
+  return apiFetch<GroupSettingsResponseDto>(`/groups/${groupId}/settings/year-range`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
+export function updateGroupMinRating(groupId: string, data: UpdateMinRatingRequest) {
+  return apiFetch<GroupSettingsResponseDto>(`/groups/${groupId}/settings/rating`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
 }

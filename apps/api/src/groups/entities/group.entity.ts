@@ -30,6 +30,21 @@ export class Group {
   @Column({ type: 'jsonb', default: () => "'{}'" })
   settings: Record<string, unknown>;
 
+  @Column({ name: 'min_year', type: 'int', nullable: true })
+  minYear: number | null;
+
+  @Column({ name: 'max_year', type: 'int', nullable: true })
+  maxYear: number | null;
+
+  @Column({ name: 'genres_include', type: 'text', array: true, nullable: true })
+  genresInclude: string[] | null;
+
+  @Column({ name: 'genres_exclude', type: 'text', array: true, nullable: true })
+  genresExclude: string[] | null;
+
+  @Column({ name: 'min_tmdb_rating', type: 'real', nullable: true })
+  minTmdbRating: number | null;
+
   @Column({ name: 'created_at', type: 'timestamp', default: () => 'now()' })
   createdAt: Date;
 }

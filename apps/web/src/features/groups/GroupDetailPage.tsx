@@ -8,14 +8,21 @@ import {
   fetchGroupAssignment,
   fetchGroupDetail,
   fetchGroupHistory,
+  fetchGroupSettings,
   leaveGroup,
   rateGroupAssignment,
   skipGroupAssignment,
+  updateGroupGenrePreferences,
+  updateGroupMinRating,
+  updateGroupYearRange,
 } from '../../api/groups';
 import { getCurrentUserId } from '../../api/token-storage';
 import { Countdown } from '../../components/Countdown';
 import { Modal } from '../../components/Modal';
 import { PageLoader } from '../../components/PageLoader';
+import { GenrePreferencesSection } from '../settings/GenrePreferencesSection';
+import { RatingSection } from '../settings/RatingSection';
+import { YearRangeSection } from '../settings/YearRangeSection';
 
 export function GroupDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -23,6 +30,7 @@ export function GroupDetailPage() {
   const queryClient = useQueryClient();
   const [inviteCode, setInviteCode] = useState<string | null>(null);
   const [showMembers, setShowMembers] = useState(false);
+  const [showPreferences, setShowPreferences] = useState(false);
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ['groups', id],
@@ -61,13 +69,41 @@ export function GroupDetailPage() {
         ← Back to groups
       </Link>
 
-      <h1>{data.name}</h1>
+      <div className="group-detail-header">
+        <h1>{data.name}</h1>
+        <button type="button" className="btn-secondary" onClick={() => setShowPreferences(true)}>
+          Movie preferences
+        </button>
+      </div>
       <p className="placeholder-copy">
         <button type="button" className="group-members-link" onClick={() => setShowMembers(true)}>
           {data.memberCount} member{data.memberCount === 1 ? '' : 's'}
         </button>{' '}
         · {data.mode === 'sync' ? 'Synced' : 'Individual'} mode
       </p>
+
+      {data.role === 'owner' && (
+        <div className="group-actions">
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => inviteMutation.mutate()}
+            disabled={inviteMutation.isPending}
+          >
+            {inviteMutation.isPending ? 'Generating…' : 'Generate invite code'}
+          </button>
+          {inviteMutation.isError && (
+            <p className="auth-error">
+              {inviteMutation.error instanceof ApiError ? inviteMutation.error.message : 'Something went wrong'}
+            </p>
+          )}
+          {inviteCode && (
+            <p className="placeholder-copy">
+              Invite code: <strong>{inviteCode}</strong>
+            </p>
+          )}
+        </div>
+      )}
 
       <GroupMovieSection groupId={data.id} />
 
@@ -86,48 +122,55 @@ export function GroupDetailPage() {
         </Modal>
       )}
 
-      <div className="group-actions">
-        {data.role === 'owner' && (
-          <div>
-            <button
-              type="button"
-              className="btn-secondary"
-              onClick={() => inviteMutation.mutate()}
-              disabled={inviteMutation.isPending}
-            >
-              {inviteMutation.isPending ? 'Generating…' : 'Generate invite code'}
-            </button>
-            {inviteMutation.isError && (
-              <p className="auth-error">
-                {inviteMutation.error instanceof ApiError ? inviteMutation.error.message : 'Something went wrong'}
-              </p>
-            )}
-            {inviteCode && (
-              <p className="placeholder-copy">
-                Invite code: <strong>{inviteCode}</strong>
-              </p>
-            )}
+      {showPreferences && (
+        <Modal title="Movie preferences" onClose={() => setShowPreferences(false)} fixedHeight>
+          <div className="preferences-section">
+            <h3>Categories</h3>
+            <GenrePreferencesSection
+              fetchSettings={() => fetchGroupSettings(data.id)}
+              updateSettings={(prefs) => updateGroupGenrePreferences(data.id, prefs)}
+              queryKey={['groups', data.id, 'settings']}
+              readOnly={data.role !== 'owner'}
+            />
           </div>
-        )}
+          <div className="preferences-section">
+            <h3>Time period</h3>
+            <YearRangeSection
+              fetchSettings={() => fetchGroupSettings(data.id)}
+              updateSettings={(range) => updateGroupYearRange(data.id, range)}
+              queryKey={['groups', data.id, 'settings']}
+              readOnly={data.role !== 'owner'}
+            />
+          </div>
+          <div className="preferences-section">
+            <h3>Rating</h3>
+            <RatingSection
+              fetchSettings={() => fetchGroupSettings(data.id)}
+              updateSettings={(rating) => updateGroupMinRating(data.id, rating)}
+              queryKey={['groups', data.id, 'settings']}
+              readOnly={data.role !== 'owner'}
+            />
+          </div>
+        </Modal>
+      )}
 
-        {data.role === 'member' && (
-          <div>
-            <button
-              type="button"
-              className="btn-secondary"
-              onClick={() => leaveMutation.mutate()}
-              disabled={leaveMutation.isPending}
-            >
-              {leaveMutation.isPending ? 'Leaving…' : 'Leave group'}
-            </button>
-            {leaveMutation.isError && (
-              <p className="auth-error">
-                {leaveMutation.error instanceof ApiError ? leaveMutation.error.message : 'Something went wrong'}
-              </p>
-            )}
-          </div>
-        )}
-      </div>
+      {data.role === 'member' && (
+        <div className="group-actions">
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => leaveMutation.mutate()}
+            disabled={leaveMutation.isPending}
+          >
+            {leaveMutation.isPending ? 'Leaving…' : 'Leave group'}
+          </button>
+          {leaveMutation.isError && (
+            <p className="auth-error">
+              {leaveMutation.error instanceof ApiError ? leaveMutation.error.message : 'Something went wrong'}
+            </p>
+          )}
+        </div>
+      )}
     </section>
   );
 }

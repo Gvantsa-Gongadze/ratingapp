@@ -3,7 +3,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Assignment } from '../assignments/entities/assignment.entity';
 import { MoviesModule } from '../movies/movies.module';
 import { RatingsModule } from '../ratings/ratings.module';
-import { UsersModule } from '../users/users.module';
 import { GroupCycle } from './entities/group-cycle.entity';
 import { GroupInvite } from './entities/group-invite.entity';
 import { GroupMember } from './entities/group-member.entity';
@@ -18,7 +17,6 @@ import { GroupsService } from './groups.service';
     TypeOrmModule.forFeature([Group, GroupMember, GroupInvite, GroupCycle, Assignment]),
     MoviesModule,
     RatingsModule,
-    UsersModule,
   ],
   controllers: [GroupsController, GroupAssignmentsController],
   providers: [GroupsService, GroupAssignmentsService],

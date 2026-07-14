@@ -1,4 +1,6 @@
+import type { QueryKey } from '@tanstack/react-query';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { UpdateMinRatingRequest } from '@ratingapp/shared-types';
 import { FormEvent, useEffect, useState } from 'react';
 import { ApiError } from '../../api/client';
 import { fetchUserSettings, updateMinRating } from '../../api/users';
@@ -6,13 +8,29 @@ import { PageLoader } from '../../components/PageLoader';
 
 const RATING_OPTIONS = Array.from({ length: 18 }, (_, i) => (1 + i * 0.5).toFixed(1));
 
-export function RatingSection() {
+interface RatingData {
+  settings: { minTmdbRating: number | null };
+}
+
+interface RatingSectionProps {
+  fetchSettings?: () => Promise<RatingData>;
+  updateSettings?: (data: UpdateMinRatingRequest) => Promise<unknown>;
+  queryKey?: QueryKey;
+  /** Members other than the group owner can see this preference but not edit it. */
+  readOnly?: boolean;
+}
+
+export function RatingSection({
+  fetchSettings = fetchUserSettings,
+  updateSettings = updateMinRating,
+  queryKey = ['users', 'settings'],
+  readOnly = false,
+}: RatingSectionProps = {}) {
   const queryClient = useQueryClient();
-  const queryKey = ['users', 'settings'];
 
   const { data, isLoading, isError, error } = useQuery({
     queryKey,
-    queryFn: fetchUserSettings,
+    queryFn: fetchSettings,
     retry: false,
   });
 
@@ -27,7 +45,7 @@ export function RatingSection() {
   }, [data, initialized]);
 
   const mutation = useMutation({
-    mutationFn: updateMinRating,
+    mutationFn: updateSettings,
     onSuccess: (result) => {
       queryClient.setQueryData(queryKey, result);
     },
@@ -59,11 +77,13 @@ export function RatingSection() {
 
   return (
     <form className="auth-form" onSubmit={handleSubmit}>
-      <p className="placeholder-copy">Only get movies rated at least this high on TMDB.</p>
+      <p className="placeholder-copy">
+        {readOnly ? 'Only the group owner can change this.' : 'Only get movies rated at least this high on TMDB.'}
+      </p>
 
       <label>
         Minimum rating
-        <select value={minRating} onChange={(event) => setMinRating(event.target.value)}>
+        <select value={minRating} onChange={(event) => setMinRating(event.target.value)} disabled={readOnly}>
           <option value="">Any</option>
           {RATING_OPTIONS.map((rating) => (
             <option key={rating} value={rating}>
@@ -73,25 +93,28 @@ export function RatingSection() {
         </select>
       </label>
 
-      {mutation.isError && (
-        <p className="auth-error">
-          {mutation.error instanceof ApiError ? mutation.error.message : 'Could not save your preferences'}
-        </p>
+      {!readOnly && (
+        <>
+          {mutation.isError && (
+            <p className="auth-error">
+              {mutation.error instanceof ApiError ? mutation.error.message : 'Could not save your preferences'}
+            </p>
+          )}
+          <div className="preferences-actions">
+            <button type="submit" className="btn-primary" disabled={mutation.isPending || !hasChanges}>
+              {mutation.isPending ? 'Saving…' : 'Save rating filter'}
+            </button>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={handleClear}
+              disabled={mutation.isPending || minRating === ''}
+            >
+              Clear
+            </button>
+          </div>
+        </>
       )}
-
-      <div className="preferences-actions">
-        <button type="submit" className="btn-primary" disabled={mutation.isPending || !hasChanges}>
-          {mutation.isPending ? 'Saving…' : 'Save rating filter'}
-        </button>
-        <button
-          type="button"
-          className="btn-secondary"
-          onClick={handleClear}
-          disabled={mutation.isPending || minRating === ''}
-        >
-          Clear
-        </button>
-      </div>
     </form>
   );
 }
