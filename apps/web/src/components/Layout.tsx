@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { Link, NavLink, Outlet } from 'react-router-dom';
 import { useAuth } from '../api/auth-context';
 import { PageLoader } from './PageLoader';
 
@@ -8,13 +8,7 @@ function navLinkClassName({ isActive }: { isActive: boolean }) {
 }
 
 export function Layout() {
-  const { isAuthenticated, logout } = useAuth();
-  const navigate = useNavigate();
-
-  function handleLogout() {
-    logout();
-    navigate('/auth');
-  }
+  const { isAuthenticated } = useAuth();
 
   return (
     <div className="app-shell">
@@ -39,11 +33,7 @@ export function Layout() {
               </NavLink>
             </>
           )}
-          {isAuthenticated ? (
-            <button type="button" className="nav-logout" onClick={handleLogout}>
-              Log out
-            </button>
-          ) : (
+          {!isAuthenticated && (
             <NavLink to="/auth" className={navLinkClassName}>
               Log in / Sign up
             </NavLink>

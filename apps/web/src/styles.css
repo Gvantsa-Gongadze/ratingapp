@@ -58,20 +58,6 @@ body {
   font-weight: 600;
 }
 
-.nav-logout {
-  background: none;
-  border: none;
-  padding: 0;
-  color: var(--text-dim);
-  font: inherit;
-  cursor: pointer;
-  transition: color 0.15s ease;
-}
-
-.nav-logout:hover {
-  color: var(--text);
-}
-
 .app-main {
   max-width: 720px;
   margin: 0 auto;
@@ -916,7 +902,7 @@ body {
 }
 
 .settings-page h1 {
-  margin-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .settings-page .placeholder-copy {
@@ -925,26 +911,83 @@ body {
 }
 
 .settings-section {
-  margin-bottom: 2.5rem;
-  padding-bottom: 2.5rem;
-  border-bottom: 1px solid #2c2c35;
+  margin-bottom: 1.5rem;
 }
 
 .settings-section:last-child {
   margin-bottom: 0;
-  padding-bottom: 0;
-  border-bottom: none;
+}
+
+.settings-card {
+  background: var(--surface);
+  border: 1px solid #26262f;
+  border-radius: 12px;
+  padding: 1.75rem 2rem;
 }
 
 .settings-section > h2 {
   font-size: 1.3rem;
-  margin: 0 0 1rem;
+  margin: 0 0 1.25rem;
+}
+
+.profile-summary {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+  padding-bottom: 1.75rem;
+  border-bottom: 1px solid #2c2c35;
+}
+
+.profile-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(232, 176, 60, 0.15);
+  color: var(--accent);
+  font-size: 1.2rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.profile-username {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.profile-email {
+  margin: 0.15rem 0 0;
+  font-size: 0.85rem;
+  color: var(--text-dim);
 }
 
 .account-forms {
   display: flex;
   flex-wrap: wrap;
-  gap: 2.5rem;
+  gap: 1.5rem;
+}
+
+.account-form-card {
+  flex: 1 1 260px;
+  margin: 0;
+  background: var(--bg);
+  border: 1px solid #24242c;
+  border-radius: 10px;
+  padding: 1.5rem;
+}
+
+.settings-logout {
+  border-color: var(--error);
+  color: var(--error);
+}
+
+.settings-logout:hover:not(:disabled) {
+  background: rgba(229, 72, 77, 0.08);
+  border-color: var(--error);
 }
 
 .genre-chip-list {

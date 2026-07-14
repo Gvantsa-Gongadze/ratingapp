@@ -1,19 +1,39 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { FormEvent, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { fetchMe } from '../../api/auth';
+import { useAuth } from '../../api/auth-context';
 import { ApiError } from '../../api/client';
 import { changeEmail, changePassword } from '../../api/users';
 import { PageLoader } from '../../components/PageLoader';
 
 export function SettingsPage() {
+  const { isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
+
+  function handleLogout() {
+    logout();
+    navigate('/auth');
+  }
+
   return (
     <section className="settings-page">
       <h1>Settings</h1>
 
-      <div className="settings-section">
+      <div className="settings-section settings-card">
         <h2>Account</h2>
         <AccountSection />
       </div>
+
+      {isAuthenticated && (
+        <div className="settings-section settings-card">
+          <h2>Session</h2>
+          <p className="placeholder-copy">Sign out of RatingApp on this device.</p>
+          <button type="button" className="btn-secondary settings-logout" onClick={handleLogout}>
+            Log out
+          </button>
+        </div>
+      )}
     </section>
   );
 }
@@ -31,9 +51,13 @@ function AccountSection() {
   return (
     <>
       {me && (
-        <p className="placeholder-copy">
-          Signed in as <strong>{me.username}</strong> ({me.email})
-        </p>
+        <div className="profile-summary">
+          <div className="profile-avatar">{me.username.charAt(0).toUpperCase()}</div>
+          <div>
+            <p className="profile-username">{me.username}</p>
+            <p className="profile-email">{me.email}</p>
+          </div>
+        </div>
       )}
 
       <div className="account-forms">
@@ -62,7 +86,7 @@ function ChangePasswordForm() {
   }
 
   return (
-    <form className="auth-form" onSubmit={handleSubmit}>
+    <form className="auth-form account-form-card" onSubmit={handleSubmit}>
       <h2>Change password</h2>
 
       <label>
@@ -122,7 +146,7 @@ function ChangeEmailForm() {
   }
 
   return (
-    <form className="auth-form" onSubmit={handleSubmit}>
+    <form className="auth-form account-form-card" onSubmit={handleSubmit}>
       <h2>Change email</h2>
 
       <label>
