@@ -19,6 +19,7 @@ import { User } from '../users/entities/user.entity';
       useFactory: (config: ConfigService) => ({
         type: 'postgres',
         url: config.get<string>('DATABASE_URL'),
+        ssl: config.get<string>('DATABASE_SSL') === 'true' ? { rejectUnauthorized: false } : false,
         entities: [
           User,
           UserSettings,

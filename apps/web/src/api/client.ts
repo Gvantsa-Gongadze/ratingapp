@@ -1,6 +1,12 @@
 import { clearTokens, getAccessToken } from './token-storage';
 
-const BASE = '/api';
+/**
+ * Relative `/api` works in dev (Vite proxies it) and in prod if the web app
+ * is served from the same domain as the API. If they're on separate
+ * domains (e.g. Vercel + Railway), set VITE_API_URL to the API's full
+ * origin at build time.
+ */
+const BASE = import.meta.env.VITE_API_URL ?? '/api';
 
 export class ApiError extends Error {
   constructor(

@@ -45,6 +45,10 @@ pnpm dev
 - API health check: http://localhost:3000/api/health
 - Web: http://localhost:5173 (proxies `/api` to the backend)
 
+## Deploying
+
+See [DEPLOY.md](DEPLOY.md) — API + Postgres on Railway, web on Vercel.
+
 ## Build order / roadmap
 
 1. ~~Project scaffold, monorepo, docker services~~
