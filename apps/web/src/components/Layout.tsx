@@ -14,7 +14,7 @@ export function Layout() {
     <div className="app-shell">
       <header className="app-header">
         <Link to="/home" className="app-logo">
-          RatingApp
+          DailyMovies
         </Link>
         <nav>
           <NavLink to="/home" className={navLinkClassName}>

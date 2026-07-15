@@ -6,7 +6,7 @@ export class HealthController {
   check() {
     return {
       status: 'ok',
-      service: 'ratingapp-api',
+      service: 'dailymovies-api',
       timestamp: new Date().toISOString(),
     };
   }

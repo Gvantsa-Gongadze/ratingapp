@@ -28,7 +28,7 @@ export function SettingsPage() {
       {isAuthenticated && (
         <div className="settings-section settings-card">
           <h2>Session</h2>
-          <p className="placeholder-copy">Sign out of RatingApp on this device.</p>
+          <p className="placeholder-copy">Sign out of DailyMovies on this device.</p>
           <button type="button" className="btn-secondary settings-logout" onClick={handleLogout}>
             Log out
           </button>

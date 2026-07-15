@@ -1,4 +1,4 @@
-# RatingApp
+# DailyMovies
 
 A daily random movie assignment and rating platform. Every user gets a random movie to watch. Rate it (or mark "didn't watch") and get the next one. Ratings feed global daily / weekly / monthly / all-time rankings. Create groups with friends for shared movie cycles and group stats.
 

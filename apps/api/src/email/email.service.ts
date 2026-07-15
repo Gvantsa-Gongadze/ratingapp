@@ -35,9 +35,9 @@ export class EmailService {
         body: JSON.stringify({
           from: this.from,
           to,
-          subject: 'Reset your RatingApp password',
+          subject: 'Reset your DailyMovies password',
           html: `
-            <p>Someone requested a password reset for your RatingApp account.</p>
+            <p>Someone requested a password reset for your DailyMovies account.</p>
             <p><a href="${resetUrl}">Reset your password</a></p>
             <p>This link expires in 1 hour. If you didn't request this, you can ignore this email.</p>
           `,

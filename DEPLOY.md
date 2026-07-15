@@ -1,4 +1,4 @@
-# Deploying RatingApp
+# Deploying DailyMovies
 
 Two pieces, two hosts:
 
