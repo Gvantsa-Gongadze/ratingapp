@@ -205,6 +205,8 @@ function GroupMovieSection({ groupId }: { groupId: string }) {
       }),
     onSuccess: (next) => {
       queryClient.setQueryData(queryKey, next);
+      queryClient.invalidateQueries({ queryKey: ['rankings'] });
+      queryClient.invalidateQueries({ queryKey: ['ratings', 'mine'] });
       setScore(7);
       setReview('');
     },

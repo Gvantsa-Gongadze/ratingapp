@@ -35,6 +35,8 @@ export function CurrentMoviePage() {
       }),
     onSuccess: (next) => {
       queryClient.setQueryData(ASSIGNMENT_QUERY_KEY, next);
+      queryClient.invalidateQueries({ queryKey: ['rankings'] });
+      queryClient.invalidateQueries({ queryKey: ['ratings', 'mine'] });
       setScore(7);
       setReview('');
     },
