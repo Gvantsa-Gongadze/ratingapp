@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { InjectRepository } from '@nestjs/typeorm';
 import type { AssignmentDto, GroupHistoryEntryDto } from '@ratingapp/shared-types';
 import { In, IsNull, Not, Repository } from 'typeorm';
+import { AssignmentHelpersService } from '../assignments/assignment-helpers.service';
 import { Assignment } from '../assignments/entities/assignment.entity';
 import { Movie } from '../movies/entities/movie.entity';
 import { MovieRandomizerService } from '../movies/movie-randomizer.service';
@@ -26,12 +27,13 @@ export class GroupAssignmentsService {
     private readonly moviesService: MoviesService,
     private readonly randomizer: MovieRandomizerService,
     private readonly ratingsService: RatingsService,
+    private readonly assignmentHelpers: AssignmentHelpersService,
   ) {}
 
   async getCurrent(userId: string, groupId: string): Promise<AssignmentDto> {
     const membership = await this.requireMembership(userId, groupId);
     const assignment = await this.getOrCreateActive(userId, groupId, membership.group);
-    return this.toDto(assignment);
+    return this.assignmentHelpers.toDto(assignment);
   }
 
   async skip(userId: string, groupId: string, assignmentId: string): Promise<AssignmentDto> {
@@ -46,7 +48,7 @@ export class GroupAssignmentsService {
     }
 
     const next = await this.getOrCreateActive(userId, groupId, membership.group);
-    return this.toDto(next);
+    return this.assignmentHelpers.toDto(next);
   }
 
   async rate(
@@ -77,7 +79,7 @@ export class GroupAssignmentsService {
     }
 
     const next = await this.getOrCreateActive(userId, groupId, membership.group);
-    return this.toDto(next);
+    return this.assignmentHelpers.toDto(next);
   }
 
   /** A group's watch history, most recent first — shape depends on the group's mode. */
@@ -198,7 +200,7 @@ export class GroupAssignmentsService {
       await this.assignmentsRepository.save(existing);
     }
 
-    const excludeTmdbIds = await this.getUserExcludedTmdbIds(userId);
+    const excludeTmdbIds = await this.assignmentHelpers.getExcludedTmdbIdsForUser(userId);
     const movie = await this.randomizer.pickForUser(this.toRandomizerFilters(group), excludeTmdbIds);
 
     const assignment = this.assignmentsRepository.create({
@@ -324,16 +326,6 @@ export class GroupAssignmentsService {
     };
   }
 
-  private async getUserExcludedTmdbIds(userId: string): Promise<Set<number>> {
-    const rows = await this.assignmentsRepository
-      .createQueryBuilder('assignment')
-      .innerJoin('assignment.movie', 'movie')
-      .where('assignment.user_id = :userId', { userId })
-      .select('movie.tmdb_id', 'tmdbId')
-      .getRawMany<{ tmdbId: number }>();
-    return new Set(rows.map((r) => r.tmdbId));
-  }
-
   private async getGroupExcludedTmdbIds(groupId: string): Promise<Set<number>> {
     const rows = await this.groupCyclesRepository
       .createQueryBuilder('cycle')
@@ -359,16 +351,4 @@ export class GroupAssignmentsService {
     return new Set(rows.map((r) => r.tmdbId));
   }
 
-  private async toDto(assignment: Assignment): Promise<AssignmentDto> {
-    const communityRating = await this.ratingsService.getMovieStats(assignment.movieId);
-    return {
-      id: assignment.id,
-      movie: this.moviesService.toDto(assignment.movie),
-      groupId: assignment.groupId,
-      assignedAt: assignment.assignedAt.toISOString(),
-      deadlineAt: assignment.deadlineAt.toISOString(),
-      status: assignment.status,
-      communityRating,
-    };
-  }
 }

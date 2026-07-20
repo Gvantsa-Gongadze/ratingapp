@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AssignmentsModule } from '../assignments/assignments.module';
 import { Assignment } from '../assignments/entities/assignment.entity';
 import { MoviesModule } from '../movies/movies.module';
 import { RatingsModule } from '../ratings/ratings.module';
@@ -17,6 +18,7 @@ import { GroupsService } from './groups.service';
     TypeOrmModule.forFeature([Group, GroupMember, GroupInvite, GroupCycle, Assignment]),
     MoviesModule,
     RatingsModule,
+    AssignmentsModule,
   ],
   controllers: [GroupsController, GroupAssignmentsController],
   providers: [GroupsService, GroupAssignmentsService],

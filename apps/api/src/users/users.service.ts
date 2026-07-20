@@ -1,8 +1,9 @@
-import { BadRequestException, ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { MessageResponseDto, UserSettingsDto, UserSettingsResponseDto } from '@ratingapp/shared-types';
 import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
+import { assertNoGenreOverlap, assertValidYearRange } from '../common/preferences-validation.util';
 import { GENRE_NAMES } from '../movies/tmdb/tmdb-genres';
 import { UserSettings } from './entities/user-settings.entity';
 import { User } from './entities/user.entity';
@@ -32,10 +33,7 @@ export class UsersService {
     genresInclude: string[],
     genresExclude: string[],
   ): Promise<UserSettingsResponseDto> {
-    const overlap = genresInclude.filter((g) => genresExclude.includes(g));
-    if (overlap.length > 0) {
-      throw new BadRequestException(`A genre can't be both included and excluded: ${overlap.join(', ')}`);
-    }
+    assertNoGenreOverlap(genresInclude, genresExclude);
 
     const existing = await this.userSettingsRepository.findOneBy({ userId });
     const settings = this.userSettingsRepository.create({
@@ -54,9 +52,7 @@ export class UsersService {
     minYear: number | null,
     maxYear: number | null,
   ): Promise<UserSettingsResponseDto> {
-    if (minYear !== null && maxYear !== null && minYear > maxYear) {
-      throw new BadRequestException('The starting year must be before the ending year');
-    }
+    assertValidYearRange(minYear, maxYear);
 
     const existing = await this.userSettingsRepository.findOneBy({ userId });
     const settings = this.userSettingsRepository.create({

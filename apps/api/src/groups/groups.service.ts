@@ -17,6 +17,7 @@ import type {
 } from '@ratingapp/shared-types';
 import { randomBytes } from 'crypto';
 import { Repository } from 'typeorm';
+import { assertNoGenreOverlap, assertValidYearRange } from '../common/preferences-validation.util';
 import { GENRE_NAMES } from '../movies/tmdb/tmdb-genres';
 import { GroupInvite } from './entities/group-invite.entity';
 import { GroupMember } from './entities/group-member.entity';
@@ -188,10 +189,7 @@ export class GroupsService {
     genresInclude: string[],
     genresExclude: string[],
   ): Promise<GroupSettingsResponseDto> {
-    const overlap = genresInclude.filter((g) => genresExclude.includes(g));
-    if (overlap.length > 0) {
-      throw new BadRequestException(`A genre can't be both included and excluded: ${overlap.join(', ')}`);
-    }
+    assertNoGenreOverlap(genresInclude, genresExclude);
 
     const group = await this.requireOwnedGroup(userId, groupId);
     group.genresInclude = genresInclude.length > 0 ? genresInclude : null;
@@ -207,9 +205,7 @@ export class GroupsService {
     minYear: number | null,
     maxYear: number | null,
   ): Promise<GroupSettingsResponseDto> {
-    if (minYear !== null && maxYear !== null && minYear > maxYear) {
-      throw new BadRequestException('The starting year must be before the ending year');
-    }
+    assertValidYearRange(minYear, maxYear);
 
     const group = await this.requireOwnedGroup(userId, groupId);
     group.minYear = minYear;

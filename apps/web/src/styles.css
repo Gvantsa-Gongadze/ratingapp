@@ -69,11 +69,6 @@ body {
   line-height: 1.6;
 }
 
-.api-status {
-  margin-top: 2rem;
-  font-size: 0.9rem;
-}
-
 .status-ok {
   color: var(--ok);
 }

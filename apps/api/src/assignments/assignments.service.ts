@@ -3,9 +3,9 @@ import type { AssignmentDto } from '@ratingapp/shared-types';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MovieRandomizerService } from '../movies/movie-randomizer.service';
-import { MoviesService } from '../movies/movies.service';
 import { RatingsService } from '../ratings/ratings.service';
 import { UsersService } from '../users/users.service';
+import { AssignmentHelpersService } from './assignment-helpers.service';
 import { Assignment } from './entities/assignment.entity';
 
 const ASSIGNMENT_DURATION_MS = 24 * 60 * 60 * 1000;
@@ -16,14 +16,14 @@ export class AssignmentsService {
     @InjectRepository(Assignment)
     private readonly assignmentsRepository: Repository<Assignment>,
     private readonly usersService: UsersService,
-    private readonly moviesService: MoviesService,
     private readonly randomizer: MovieRandomizerService,
     private readonly ratingsService: RatingsService,
+    private readonly assignmentHelpers: AssignmentHelpersService,
   ) {}
 
   async getCurrent(userId: string): Promise<AssignmentDto> {
     const assignment = await this.getOrCreateActive(userId);
-    return this.toDto(assignment);
+    return this.assignmentHelpers.toDto(assignment);
   }
 
   async skip(userId: string, assignmentId: string): Promise<AssignmentDto> {
@@ -33,7 +33,7 @@ export class AssignmentsService {
     await this.assignmentsRepository.save(assignment);
 
     const next = await this.getOrCreateActive(userId);
-    return this.toDto(next);
+    return this.assignmentHelpers.toDto(next);
   }
 
   async rate(
@@ -59,7 +59,7 @@ export class AssignmentsService {
     await this.assignmentsRepository.save(assignment);
 
     const next = await this.getOrCreateActive(userId);
-    return this.toDto(next);
+    return this.assignmentHelpers.toDto(next);
   }
 
   private async loadOwnedActive(userId: string, assignmentId: string): Promise<Assignment> {
@@ -94,7 +94,7 @@ export class AssignmentsService {
   private async createAssignment(userId: string): Promise<Assignment> {
     const [settings, excludeTmdbIds] = await Promise.all([
       this.usersService.findSettings(userId),
-      this.getExcludedTmdbIds(userId),
+      this.assignmentHelpers.getExcludedTmdbIdsForUser(userId),
     ]);
 
     const movie = await this.randomizer.pickForUser(
@@ -124,28 +124,5 @@ export class AssignmentsService {
     const saved = await this.assignmentsRepository.save(assignment);
     saved.movie = movie;
     return saved;
-  }
-
-  private async getExcludedTmdbIds(userId: string): Promise<Set<number>> {
-    const rows = await this.assignmentsRepository
-      .createQueryBuilder('assignment')
-      .innerJoin('assignment.movie', 'movie')
-      .where('assignment.user_id = :userId', { userId })
-      .select('movie.tmdb_id', 'tmdbId')
-      .getRawMany<{ tmdbId: number }>();
-    return new Set(rows.map((r) => r.tmdbId));
-  }
-
-  private async toDto(assignment: Assignment): Promise<AssignmentDto> {
-    const communityRating = await this.ratingsService.getMovieStats(assignment.movieId);
-    return {
-      id: assignment.id,
-      movie: this.moviesService.toDto(assignment.movie),
-      groupId: assignment.groupId,
-      assignedAt: assignment.assignedAt.toISOString(),
-      deadlineAt: assignment.deadlineAt.toISOString(),
-      status: assignment.status,
-      communityRating,
-    };
   }
 }

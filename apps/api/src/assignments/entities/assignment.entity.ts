@@ -10,6 +10,8 @@ import { User } from '../../users/entities/user.entity';
   unique: true,
   where: `"group_id" IS NULL AND "status" = 'active'`,
 })
+@Index(['groupId', 'userId', 'status'])
+@Index(['groupCycleId'])
 export class Assignment {
   @PrimaryColumn('uuid', { default: () => 'gen_random_uuid()' })
   id: string;

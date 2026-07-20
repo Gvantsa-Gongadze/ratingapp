@@ -1,8 +1,9 @@
-import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Group } from './group.entity';
 
 @Entity('group_members')
+@Index(['userId'])
 export class GroupMember {
   @PrimaryColumn('uuid', { name: 'group_id' })
   groupId: string;
