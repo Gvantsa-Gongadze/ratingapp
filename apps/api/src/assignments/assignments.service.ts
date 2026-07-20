@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import type { AssignmentDto } from '@ratingapp/shared-types';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { MovieRandomizerService } from '../movies/movie-randomizer.service';
 import { RatingsService } from '../ratings/ratings.service';
 import { UsersService } from '../users/users.service';
@@ -64,7 +64,7 @@ export class AssignmentsService {
 
   private async loadOwnedActive(userId: string, assignmentId: string): Promise<Assignment> {
     const assignment = await this.assignmentsRepository.findOneBy({ id: assignmentId });
-    if (!assignment || assignment.userId !== userId) {
+    if (!assignment || assignment.userId !== userId || assignment.groupId !== null) {
       throw new NotFoundException('Assignment not found');
     }
     if (assignment.status !== 'active') {
@@ -73,19 +73,28 @@ export class AssignmentsService {
     return assignment;
   }
 
+  /**
+   * The next movie only unlocks once the current deadline actually passes —
+   * rating or skipping early resolves the assignment but keeps showing it
+   * (with its resolved status) until then, rather than immediately handing
+   * out a new one.
+   */
   private async getOrCreateActive(userId: string): Promise<Assignment> {
-    const existing = await this.assignmentsRepository.findOne({
-      where: { userId, status: 'active' },
+    const latest = await this.assignmentsRepository.findOne({
+      where: { userId, groupId: IsNull() },
       relations: ['movie'],
+      order: { assignedAt: 'DESC' },
     });
 
-    if (existing) {
-      if (existing.deadlineAt.getTime() > Date.now()) {
-        return existing;
+    if (latest) {
+      if (latest.deadlineAt.getTime() > Date.now()) {
+        return latest;
       }
-      existing.status = 'expired';
-      existing.resolvedAt = new Date();
-      await this.assignmentsRepository.save(existing);
+      if (latest.status === 'active') {
+        latest.status = 'expired';
+        latest.resolvedAt = new Date();
+        await this.assignmentsRepository.save(latest);
+      }
     }
 
     return this.createAssignment(userId);

@@ -184,20 +184,28 @@ export class GroupAssignmentsService {
       : this.getOrCreateSynced(userId, groupId, group);
   }
 
-  /** Individual mode: each member gets their own random movie, filtered by the group's shared preferences. */
+  /**
+   * Individual mode: each member gets their own random movie, filtered by
+   * the group's shared preferences. Like the solo flow, rating or skipping
+   * early resolves the assignment but keeps showing it until the deadline
+   * actually passes, rather than immediately handing out a new one.
+   */
   private async getOrCreateIndividual(userId: string, groupId: string, group: Group): Promise<Assignment> {
     const existing = await this.assignmentsRepository.findOne({
-      where: { userId, groupId, status: 'active' },
+      where: { userId, groupId },
       relations: ['movie'],
+      order: { assignedAt: 'DESC' },
     });
 
     if (existing) {
       if (existing.deadlineAt.getTime() > Date.now()) {
         return existing;
       }
-      existing.status = 'expired';
-      existing.resolvedAt = new Date();
-      await this.assignmentsRepository.save(existing);
+      if (existing.status === 'active') {
+        existing.status = 'expired';
+        existing.resolvedAt = new Date();
+        await this.assignmentsRepository.save(existing);
+      }
     }
 
     const excludeTmdbIds = await this.assignmentHelpers.getExcludedTmdbIdsForUser(userId);

@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { AssignmentDto } from '@ratingapp/shared-types';
 import { ChangeEvent, FormEvent, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchCurrentAssignment, rateAssignment, skipAssignment } from '../../api/assignments';
@@ -10,6 +11,12 @@ import { RatingSection } from '../settings/RatingSection';
 import { YearRangeSection } from '../settings/YearRangeSection';
 
 const ASSIGNMENT_QUERY_KEY = ['assignment', 'current'];
+
+const STATUS_COPY: Record<Exclude<AssignmentDto['status'], 'active'>, string> = {
+  rated: "You've rated this one — your next movie unlocks when the countdown ends.",
+  skipped: "You skipped this one — your next movie unlocks when the countdown ends.",
+  expired: 'Fetching your next movie…',
+};
 
 export function CurrentMoviePage() {
   const queryClient = useQueryClient();
@@ -126,10 +133,14 @@ export function CurrentMoviePage() {
           {data.movie.runtime && <p className="movie-runtime">{data.movie.runtime} min</p>}
           {data.movie.overview && <p className="movie-overview">{data.movie.overview}</p>}
 
-          <Countdown
-            deadlineAt={data.deadlineAt}
-            onExpire={() => queryClient.invalidateQueries({ queryKey: ASSIGNMENT_QUERY_KEY })}
-          />
+          {data.status === 'active' ? (
+            <Countdown
+              deadlineAt={data.deadlineAt}
+              onExpire={() => queryClient.invalidateQueries({ queryKey: ASSIGNMENT_QUERY_KEY })}
+            />
+          ) : (
+            <p className="countdown">{STATUS_COPY[data.status]}</p>
+          )}
 
           <div className="movie-links">
             <a href={data.movie.links.tmdb} target="_blank" rel="noreferrer">
@@ -162,61 +173,63 @@ export function CurrentMoviePage() {
         </div>
       </div>
 
-      <form className="rate-form" onSubmit={handleRate}>
-        <label>
-          Your rating (1-10)
-          <input
-            type="number"
-            min={1}
-            max={10}
-            step={0.1}
-            required
-            value={score}
-            onChange={handleScoreChange}
-            onBlur={handleScoreBlur}
-          />
-        </label>
-        {score !== '' && !isScoreValid && (
-          <p className="auth-error">Rating must be between 1 and 10, with at most one decimal place</p>
-        )}
+      {data.status === 'active' && (
+        <form className="rate-form" onSubmit={handleRate}>
+          <label>
+            Your rating (1-10)
+            <input
+              type="number"
+              min={1}
+              max={10}
+              step={0.1}
+              required
+              value={score}
+              onChange={handleScoreChange}
+              onBlur={handleScoreBlur}
+            />
+          </label>
+          {score !== '' && !isScoreValid && (
+            <p className="auth-error">Rating must be between 1 and 10, with at most one decimal place</p>
+          )}
 
-        <label>
-          Review (optional)
-          <textarea
-            rows={3}
-            value={review}
-            onChange={(event) => setReview(event.target.value)}
-          />
-        </label>
+          <label>
+            Review (optional)
+            <textarea
+              rows={3}
+              value={review}
+              onChange={(event) => setReview(event.target.value)}
+            />
+          </label>
 
-        {rateMutation.isError && (
-          <p className="auth-error">
-            {rateMutation.error instanceof ApiError ? rateMutation.error.message : 'Could not submit rating'}
-          </p>
-        )}
-        {skipMutation.isError && (
-          <p className="auth-error">
-            {skipMutation.error instanceof ApiError ? skipMutation.error.message : "Could not skip"}
-          </p>
-        )}
+          {rateMutation.isError && (
+            <p className="auth-error">
+              {rateMutation.error instanceof ApiError ? rateMutation.error.message : 'Could not submit rating'}
+            </p>
+          )}
+          {skipMutation.isError && (
+            <p className="auth-error">
+              {skipMutation.error instanceof ApiError ? skipMutation.error.message : "Could not skip"}
+            </p>
+          )}
 
-        <div className="movie-actions">
-          <button
-            type="submit"
-            disabled={!isScoreValid || rateMutation.isPending || skipMutation.isPending}
-          >
-            {rateMutation.isPending ? 'Saving…' : 'Rate'}
-          </button>
-          <button
-            type="button"
-            className="btn-secondary"
-            onClick={handleSkip}
-            disabled={rateMutation.isPending || skipMutation.isPending}
-          >
-            {skipMutation.isPending ? 'Skipping…' : "Didn't watch"}
-          </button>
-        </div>
-      </form>
+          <div className="movie-actions">
+            <button
+              type="submit"
+              disabled={!isScoreValid || rateMutation.isPending || skipMutation.isPending}
+            >
+              {rateMutation.isPending ? 'Saving…' : 'Rate'}
+            </button>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={handleSkip}
+              disabled={rateMutation.isPending || skipMutation.isPending}
+            >
+              {skipMutation.isPending ? 'Skipping…' : "Didn't watch"}
+            </button>
+          </div>
+        </form>
+      )}
 
       {showPreferences && (
         <Modal title="Movie preferences" onClose={() => setShowPreferences(false)} fixedHeight>
