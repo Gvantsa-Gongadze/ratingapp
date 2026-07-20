@@ -133,14 +133,11 @@ export function CurrentMoviePage() {
           {data.movie.runtime && <p className="movie-runtime">{data.movie.runtime} min</p>}
           {data.movie.overview && <p className="movie-overview">{data.movie.overview}</p>}
 
-          {data.status === 'active' ? (
-            <Countdown
-              deadlineAt={data.deadlineAt}
-              onExpire={() => queryClient.invalidateQueries({ queryKey: ASSIGNMENT_QUERY_KEY })}
-            />
-          ) : (
-            <p className="countdown">{STATUS_COPY[data.status]}</p>
-          )}
+          {data.status !== 'active' && <p className="countdown">{STATUS_COPY[data.status]}</p>}
+          <Countdown
+            deadlineAt={data.deadlineAt}
+            onExpire={() => queryClient.invalidateQueries({ queryKey: ASSIGNMENT_QUERY_KEY })}
+          />
 
           <div className="movie-links">
             <a href={data.movie.links.tmdb} target="_blank" rel="noreferrer">

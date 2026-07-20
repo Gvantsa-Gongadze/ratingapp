@@ -34,7 +34,7 @@ export function Countdown({ deadlineAt, onExpire }: { deadlineAt: string; onExpi
 
   return (
     <p className="countdown">
-      {pad(hours)}:{pad(minutes)}:{pad(seconds)} left to rate
+      {pad(hours)}:{pad(minutes)}:{pad(seconds)} left
     </p>
   );
 }
