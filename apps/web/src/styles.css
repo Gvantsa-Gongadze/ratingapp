@@ -93,12 +93,15 @@ body {
 
 .movie-card {
   display: flex;
+  align-items: flex-start;
   gap: 1.5rem;
   margin: 1.5rem 0 2rem;
 }
 
 .movie-poster {
   width: 180px;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
   border-radius: 8px;
   flex-shrink: 0;
 }
