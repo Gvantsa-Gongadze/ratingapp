@@ -45,6 +45,9 @@ export class AuthService {
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
       throw new UnauthorizedException('Invalid email or password');
     }
+    if (user.bannedAt) {
+      throw new UnauthorizedException('This account has been suspended');
+    }
     return this.buildAuthResponse(user);
   }
 
@@ -99,7 +102,7 @@ export class AuthService {
   }
 
   toMeDto(user: User): MeDto {
-    return { ...this.toUserDto(user), email: user.email };
+    return { ...this.toUserDto(user), email: user.email, role: user.role };
   }
 
   private toUserDto(user: User): UserDto {

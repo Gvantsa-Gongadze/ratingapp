@@ -1,5 +1,7 @@
+import { useQuery } from '@tanstack/react-query';
 import { Suspense } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
+import { fetchMe } from '../api/auth';
 import { useAuth } from '../api/auth-context';
 import { PageLoader } from './PageLoader';
 
@@ -9,6 +11,12 @@ function navLinkClassName({ isActive }: { isActive: boolean }) {
 
 export function Layout() {
   const { isAuthenticated } = useAuth();
+  const { data: me } = useQuery({
+    queryKey: ['auth', 'me'],
+    queryFn: fetchMe,
+    enabled: isAuthenticated,
+    retry: false,
+  });
 
   return (
     <div className="app-shell">
@@ -31,6 +39,11 @@ export function Layout() {
               <NavLink to="/settings" className={navLinkClassName}>
                 Settings
               </NavLink>
+              {me?.role === 'admin' && (
+                <NavLink to="/admin" className={navLinkClassName}>
+                  Admin
+                </NavLink>
+              )}
             </>
           )}
           {!isAuthenticated && (

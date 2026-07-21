@@ -1,4 +1,4 @@
-import type { UserDto } from './user';
+import type { UserDto, UserRole } from './user';
 
 export interface RegisterRequest {
   email: string;
@@ -49,4 +49,5 @@ export interface AuthResponseDto extends AuthTokensDto {
 
 export interface MeDto extends UserDto {
   email: string;
+  role: UserRole;
 }

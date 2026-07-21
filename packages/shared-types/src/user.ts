@@ -1,3 +1,5 @@
+export type UserRole = 'user' | 'admin';
+
 export interface UserDto {
   id: string;
   username: string;

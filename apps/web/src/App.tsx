@@ -25,6 +25,7 @@ const UserProfilePage = lazy(() =>
 const SettingsPage = lazy(() =>
   import('./features/settings/SettingsPage').then((m) => ({ default: m.SettingsPage })),
 );
+const AdminPage = lazy(() => import('./features/admin/AdminPage').then((m) => ({ default: m.AdminPage })));
 
 export default function App() {
   return (
@@ -40,6 +41,7 @@ export default function App() {
         <Route path="groups/:id" element={<GroupDetailPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="u/:username" element={<UserProfilePage />} />
+        <Route path="admin" element={<AdminPage />} />
       </Route>
     </Routes>
   );

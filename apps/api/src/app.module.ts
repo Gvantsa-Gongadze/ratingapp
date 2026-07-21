@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { AdminModule } from './admin/admin.module';
 import { AssignmentsModule } from './assignments/assignments.module';
 import { AuthModule } from './auth/auth.module';
 import { DatabaseModule } from './database/database.module';
@@ -25,6 +26,7 @@ import { UsersModule } from './users/users.module';
     AssignmentsModule,
     RankingsModule,
     GroupsModule,
+    AdminModule,
     // Coming next, in build order:
     // JobsModule,
   ],

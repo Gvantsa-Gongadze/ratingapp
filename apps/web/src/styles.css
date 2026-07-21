@@ -1093,6 +1093,119 @@ body {
   align-items: center;
 }
 
+.admin-page h1 {
+  margin-bottom: 1rem;
+}
+
+.admin-page h2 {
+  margin: 2rem 0 0.9rem;
+  font-size: 1.1rem;
+}
+
+.admin-list {
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.admin-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.9rem 1.1rem;
+  background: var(--surface);
+  border: 1px solid #26262f;
+  border-radius: 10px;
+}
+
+.admin-row-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.admin-row-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.admin-row-meta {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.admin-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.admin-badge {
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.admin-badge--role {
+  color: var(--accent);
+  background: rgba(232, 176, 60, 0.12);
+  border: 1px solid var(--accent);
+}
+
+.admin-badge--banned {
+  color: var(--error);
+  background: rgba(229, 72, 77, 0.12);
+  border: 1px solid var(--error);
+}
+
+.admin-review-meta {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.admin-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.admin-stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 1.25rem 1rem;
+  background: var(--surface);
+  border: 1px solid #26262f;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.admin-stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.admin-stat-label {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
 @media (max-width: 640px) {
   .app-header {
     justify-content: center;

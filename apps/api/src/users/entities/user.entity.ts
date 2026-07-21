@@ -26,6 +26,12 @@ export class User {
   @Column({ name: 'reset_password_expires_at', type: 'timestamp', nullable: true })
   resetPasswordExpiresAt: Date | null;
 
+  @Column({ type: 'enum', enum: ['user', 'admin'], default: 'user' })
+  role: 'user' | 'admin';
+
+  @Column({ name: 'banned_at', type: 'timestamp', nullable: true })
+  bannedAt: Date | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 }
