@@ -61,14 +61,14 @@ function AccountSection() {
       )}
 
       <div className="account-forms">
-        <ChangePasswordForm />
-        <ChangeEmailForm />
+        <ChangePasswordForm email={me?.email ?? ''} />
+        <ChangeEmailForm email={me?.email ?? ''} />
       </div>
     </>
   );
 }
 
-function ChangePasswordForm() {
+function ChangePasswordForm({ email }: { email: string }) {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
 
@@ -88,6 +88,11 @@ function ChangePasswordForm() {
   return (
     <form className="auth-form account-form-card" onSubmit={handleSubmit}>
       <h2>Change password</h2>
+
+      <label className="visually-hidden">
+        Username
+        <input type="text" autoComplete="username" readOnly value={email} />
+      </label>
 
       <label>
         Current password
@@ -126,7 +131,7 @@ function ChangePasswordForm() {
   );
 }
 
-function ChangeEmailForm() {
+function ChangeEmailForm({ email }: { email: string }) {
   const queryClient = useQueryClient();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newEmail, setNewEmail] = useState('');
@@ -148,6 +153,11 @@ function ChangeEmailForm() {
   return (
     <form className="auth-form account-form-card" onSubmit={handleSubmit}>
       <h2>Change email</h2>
+
+      <label className="visually-hidden">
+        Username
+        <input type="text" autoComplete="username" readOnly value={email} />
+      </label>
 
       <label>
         Current password

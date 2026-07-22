@@ -44,6 +44,11 @@ export function ResetPasswordPage() {
     <section className="auth-page">
       <h1>Reset password</h1>
       <form className="auth-form" onSubmit={handleSubmit}>
+        <label className="visually-hidden">
+          Username
+          <input type="text" autoComplete="username" readOnly value="" />
+        </label>
+
         <label>
           New password
           <input
